@@ -1,0 +1,25 @@
+\section{Future work} \label{sec:future}
+
+There are a number of important features that remain to be implemented in future revisions, some of which are listed below:
+\begin{itemize}
+% \item When dealing with spatial-only data, and when the number of spatial data points is relatively low, the standard deviation of the measurement error can be estimated using variogram analysis. This is not very reliable, and estimation of this quantity is, ideally, included in the EM algorithm. This is indeed possible; however the standard deviation of the measurement error is confounded with the fine-scale variation when there is on average only 1 data point per BAU. Checks will need to be made to inform the user whether or not one should be attempting to estimate $\sigma^2_\epsilon$  in the EM algorithm, along with $\sigma^2_\xi$.
+
+\item Currently, \pkg{FRK} is designed to work with local basis functions with analytic form. However, the package can also accommodate basis functions that have no known functional form, such as empirical orthogonal functions (EOFs) and classes of wavelets defined iteratively; future work will attempt to incorporate the use of such basis functions. Vanilla FRK (FRK-V), where the entire positive-definite matrix $\Kmat$ is estimated, is particularly suited to the former (EOF) case where one has very few basis functions that explain a considerable amount of observed variability.
+
+\item There is currently no component of the model that caters for sub-BAU process variation, and each datum that is point-referenced is mapped onto a BAU. Going below the BAU scale is possible, and intra-BAU correlation can be incorporated if the covariance function of the process at the sub-BAU scale is known \citep{Wikle_2005}.
+
+\item Most work and testing in \pkg{FRK} has been done on the real line, the 2D plane and the surface of the sphere ($\mathbb{S}^2$). Other manifolds can be implemented since the SRE model always yields a valid spatial covariance function, no matter the manifold. Some, such as the 3D hyperplane, are not too difficult to construct. Ultimately, it would be ideal if the user can specify his/her own manifold, along with a function that can compute the appropriate distances on the manifold.
+
+\item Although designed for very large data, \pkg{FRK} begins to slow down when several hundreds of thousands of data points are used. The flag \code{average\_in\_BAU} can be used to summarise the data and hence reduce the size of the dataset, however it is not always obvious how the data should be summarised (and whether one should summarise it in the first place). Future work will focus on providing the user with different options for summarising the data.
+
+\item Currently all BAUs are assumed to be of equal area. This is not problematic in our case, since we use equal-area icosahedral grids on the surface of the sphere, and regular grids on the real line and the plane. However, a regular grid on the surface of the sphere, for example that shown in Figure~\ref{fig:sphere_BAUs}, right panel, is not an equal area grid and appropriate weighing should be used in this case when aggregating to arbitrary polygons.
+
+\end{itemize}
+
+In summary, the package \pkg{FRK} is designed to address the majority of needs for spatial and spatio-temporal prediction.  The low-rank model used by the package has validity (accurate coverage) in a big-data scenario when compared to high-rank models implemented by other packages such as \pkg{LatticeKrig} and \pkg{INLA}. However, it is less efficient (larger root mean squared prediction errors) when data density is high and the basis functions are unable to capture the spatial variability.
+
+The development page of \pkg{FRK} is \code{https://github.com/andrewzm/FRK}. Users are encouraged to report any bugs or issues relating to the package on this page.
+
+\section*{Acknowledgements}
+
+Package development was facilitated with \pkg{devtools}; this paper was compiled using \pkg{knitr}, and package testing was carried out using \pkg{testthat} and \pkg{covr}. The package includes within it some data manipulation functions from \pkg{Hmisc}, and the function \code{rdist.earth} from the package \pkg{fields}. Some sparse-matrix operations are facilitated using \proglang{C} code from the software package \pkg{SuiteSparse} \citep{SuiteSparse}. We thank Jonathan Rougier for helpful comments on the manuscript, Chris Wikle for discussions on the importance of the fine-scale variation component of a spatial statistical model, Clint Shumack for using \pkg{FRK} to analyse the OCO-2 data, and Enki Yoo for providing useful feedback on the package.
