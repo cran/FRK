@@ -24,11 +24,12 @@ coordinates(meuse) = ~x+y     # change into an sp object
 
 ## ----message=FALSE-------------------------------------------------------
 set.seed(1)
-GridBAUs1 <- auto_BAUs(manifold = plane(),     # 2D plane
+GridBAUs1 <- auto_BAUs(manifold = plane(),    # 2D plane
                      cellsize = c(100,100),   # BAU cellsize
                      type = "grid",           # grid (not hex)
                      data = meuse,            # data around which to create BAUs
-                     convex=-0.05)            # border buffer factor
+                     convex=-0.05,            # border buffer factor
+                     nonconvex_hull=FALSE)    # convex hull
 
 ## ------------------------------------------------------------------------
 GridBAUs1$fs <- 1   # fine-scale variation at BAU level
@@ -42,10 +43,9 @@ plot(as(GridBAUs1,"SpatialPolygons"),add=T)
 ## ------------------------------------------------------------------------
 G <- auto_basis(manifold = plane(),   # 2D plane
                 data=meuse,           # meuse data
-                nres = 3,             # number of resolutions
-                prune = 5,            # prune threshold
+                nres = 2,             # number of resolutions
                 type = "Gaussian",    # type of basis function
-                regular = 0)          # place irregularly in domain
+                regular = 1)          # place regularly in domain
 
 ## ----fig.cap="Basis functions automatically generated for the meuse dataset with 2 resolutions. The interpretation of the circles change with the domain and basis. For Gaussian functions on the plane, each circle is centred at the basis function centre, and has a radius equal to $1\\sigma$. Type \\tt{help(auto\\_basis)} for details.\\label{fig:basis}",fig.height=6,fig.width=6,out.width="0.5\\linewidth",fig.align='center',fig.pos="t"----
 show_basis(G) +             # illustrate basis functions
@@ -61,12 +61,12 @@ S <- SRE(f = f,                  # formula
          data = list(meuse),     # list of datasets
          BAUs = GridBAUs1,       # BAUs
          basis = G,              # basis functions
-         est_error=TRUE,         # estimation measurement error
+         est_error = TRUE,       # estimation measurement error
          average_in_BAU = FALSE) # do not average data over BAUs
 
 ## ----cache=FALSE,fig.cap="Convergence of the EM algorithm when using \\tt{FRK} with the \\tt{meuse} dataset.\\label{fig:EM}",fig.height=4,fig.width=5,fig.align='center'----
 S <- SRE.fit(SRE_model = S,    # SRE model
-             n_EM = 5,         # max. no. of EM iterations
+             n_EM = 10,         # max. no. of EM iterations
              tol = 0.01,       # tolerance at which EM is assumed to have converged
              print_lik=TRUE)   # print log-likelihood at each iteration
 
@@ -112,12 +112,12 @@ Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
                           cellsize = c(600,600),   # choose a large grid size
                           type = "grid",           # use a grid (not hex)
                           data = meuse,            # the dataset on which to center cells
-                          convex=-0.05)            # border buffer factor
+                          convex=-0.05,            # border buffer factor
+                          nonconvex_hull=FALSE)    # convex hull
 
 ## ------------------------------------------------------------------------
 Pred_regions <- SRE.predict(SRE_model = S,                # SRE model
-                            pred_polys = Pred_regions,    # prediction polygons
-                            obs_fs = FALSE)
+                            pred_polys = Pred_regions)    # prediction polygons
 
 ## ----echo=FALSE,fig.cap="Prediction and prediction standard error obtained with FRK from the \\tt{meuse} dataset over arbitrary polygons. Both quantities are logs of ppm.\\label{fig:PredictionPolygon}",fig.subcap=c("",""),fig.width=6,fig.height=7.5,out.width="0.5\\linewidth",fig.pos="t"----
 Pred_regions_df <- SpatialPolygonsDataFrame_to_df(sp_polys = Pred_regions,
@@ -153,7 +153,7 @@ data(AIRS_05_2003)                                          ## Load data
 ## ------------------------------------------------------------------------
 AIRS_05_2003 <-
     dplyr::filter(AIRS_05_2003,day %in% 1:3) %>%    # only first three days
-    dplyr::mutate(std=co2std) %>%                          # change std to have suitable name
+    dplyr::mutate(std=co2std) %>%                   # change std to have suitable name
     dplyr::select(lon,lat,co2avgret,std)            # select columns we actually need
 coordinates(AIRS_05_2003) = ~lon+lat                # change into an sp object
 proj4string(AIRS_05_2003) =
@@ -170,9 +170,8 @@ isea3h_sp_poldf$fs = 1                               # fine-scale component
 G <- auto_basis(manifold = sphere(), # basis functions on the sphere
                 data=AIRS_05_2003,   # AIRS data
                 nres = 3,            # number of resolutions
-                prune = 0,            # prune threshold
-                type = "bisquare",   # bisquare function
-                subsamp = 20000)     # prune using 20000 data points (at random)
+                type = "bisquare")  # bisquare function
+
 
 ## ----echo=FALSE,fig.cap="BAUs and basis functions used in modelling and predicting with the \\tt{AIRS} data. (a) BAUs are the ISEA3H hexagons at resolution 5. (b) Basis function centroids constructed using the function \\tt{auto\\_basis}.\\label{fig:sphere_BAUs}",fig.subcap=c("",""),fig.width=6,fig.height=6,out.width="0.5\\linewidth",fig.pos="t!",message=FALSE,dev = 'png',dev = 'png'----
 data("isea3h")
@@ -206,9 +205,8 @@ isea3h_sp_poldf <- SRE.predict(SRE_model = S)          # fs variation is in the 
 ## ----echo=FALSE,results='hide',message=FALSE-----------------------------
 X <- SpatialPolygonsDataFrame_to_df(sp_polys = isea3h_sp_poldf,
                                     vars = c("mu","var"))
-
-mumin <- min(X$mu)
-mumax <- max(X$mu)
+mumin <- quantile(X$mu,0.01)
+mumax <- quantile(X$mu,0.99)
 
 ## ----echo=FALSE,fig.width=7,fig.height=3.5,out.width="\\linewidth",fig.pos="t!",fig.cap="CO$_2$ mole-fraction readings in ppm from the \\tt{AIRS}.\\label{fig:AIRSresults1}",fig.align="centre",dev = 'png',dpi=70----
 g1 <- (EmptyTheme() +
@@ -230,8 +228,8 @@ print(g1)
 ## ----echo=FALSE,fig.width=7,fig.height=3.5,out.width="\\linewidth",fig.pos="t!",fig.cap="Prediction of $\\Yvec_P$ in ppm following FRK on the \\tt{AIRS} data.\\label{fig:AIRSresults2}",fig.align="centre",dev = 'png',dpi=70----
 g2 <- (EmptyTheme() +
            geom_polygon(data=X,
-                        aes(lon,lat,fill=mu,group=id))+
-           scale_fill_distiller(palette="Spectral",name="pred. (ppm)") +
+                        aes(lon,lat,fill=pmin(pmax(mu,mumin),mumax),group=id))+
+           scale_fill_distiller(palette="Spectral",name="pred. (ppm)",limits=c(mumin,mumax)) +
            coord_map("mollweide")) %>%
     draw_world(inc_border=TRUE)+
           xlab("lon (deg)") +
@@ -243,7 +241,7 @@ X$se <- pmax(sqrt(X$var),0.32)
 g3 <- (EmptyTheme() +
            geom_polygon(data=X,
                         aes(lon,lat,fill=se,group=id))+
-           scale_fill_distiller(palette="Spectral",name="s.e. (ppm)") +
+           scale_fill_distiller(palette="BrBG",name="s.e. (ppm)") +
            coord_map("mollweide")) %>%
     draw_world(inc_border=TRUE)+
           xlab("lon (deg)") +
@@ -283,7 +281,8 @@ grid_BAUs <- auto_BAUs(manifold=STplane(),    # spatio-temporal process on the p
                        cellsize = c(1,1,1),   # BAU cell size
                        type="grid",           # grid or hex?
                        convex=-0.1,           # parameter for hull construction
-                       tunit="days")          # time unit
+                       tunit="days",          # time unit
+                       nonconvex_hull=FALSE)  # convex hull
 grid_BAUs$fs = 1                       # fine-scale variation
 
 ## ------------------------------------------------------------------------
@@ -291,7 +290,7 @@ G_spatial <- auto_basis(manifold = plane(),          # spatial functions on the 
                         data=as(STObj,"Spatial"),    # remove the temporal dimension
                         nres = 1,                    # three resolutions
                         type = "bisquare",           # bisquare basis functions
-                        regular = 0)
+                        regular = 1)                 # regular basis functions
 
 ## ----warning=FALSE-------------------------------------------------------
 print(head(grid_BAUs@time))                                # show time indices
@@ -389,9 +388,8 @@ data(AIRS_05_2003)   # load AIRS data
 ## ----eval=TRUE-----------------------------------------------------------
 set.seed(1)
 AIRS_05_2003 <- mutate(AIRS_05_2003,           # take the data
-                       std=co2std,             # rename std
-                       t = day)   %>%          # generate time index
-                sample_n(20000)                # sample 2000 points
+                       std=co2std) %>%         # rename std
+                sample_n(20000)                # sample 20000 points
 
 ## ------------------------------------------------------------------------
 AIRS_05_2003 <- within(AIRS_05_2003,
@@ -406,7 +404,7 @@ STObj <- stConstruct(x = AIRS_05_2003,            # dataset
 
 ## ----eval=TRUE,cache=FALSE-----------------------------------------------
 ## Prediction (BAU) grid
-grid_BAUs <- auto_BAUs(manifold=STsphere(),   # space-time field on sphere
+grid_BAUs <- auto_BAUs(manifold=STsphere(),         # space-time field on sphere
                              data=time(STObj),      # temporal part of the data
                              cellsize = c(5,5,1),   # cellsize (5 deg x 5 deg x 1 day)
                              type="grid",           # grid (not hex)
@@ -457,7 +455,7 @@ S <- SRE(f = f,                   # formula
          average_in_BAU = TRUE)   # average data that fall inside BAUs
 
 S <- SRE.fit(SRE_model = S,       # SRE model
-             n_EM = 4,          # max. EM iterations
+             n_EM = 2,          # max. EM iterations
              tol = 0.01)          # convergence criteria
 
 grid_BAUs <- SRE.predict(SRE_model = S,         # SRE model
@@ -476,13 +474,13 @@ mumax <- max(X$mu)
 
 ## ----echo=FALSE, fig.keep=TRUE,fig.cap="CO$_2$ readings taken from the \\tt{AIRS} on the 04, 08 and 12 May 2003 in ppm. \\label{fig:FRK_AIRS_ST1}",fig.align="center",out.width="\\linewidth",fig.height=3,fig.width=16,fig.pos="t!",dev = 'png',dpi=70----
 g1 <- (EmptyTheme() +
-           geom_point(data=dplyr::filter(AIRS_05_2003,t %in% c(4,8,12)),
+           geom_point(data=dplyr::filter(AIRS_05_2003,day %in% c(4,8,12)),
                       aes(lon,lat,
                           colour=pmin(pmax(
                               co2avgret,mumin),
                               mumax)),
                       size=0.5) +
-           facet_grid(~t)+
+           facet_grid(~day)+
            scale_colour_distiller(palette="Spectral",
                                   guide_legend(title="co2 (ppm)")) +
            coord_map("mollweide") +
@@ -545,6 +543,7 @@ meuse_pols <- df_to_SpatialPolygons(meuse_pols,coords=c("x","y"),keys="id",proj 
 meuse_pols <- SpatialPolygonsDataFrame(meuse_pols,data.frame(row.names = row.names(meuse_pols),zinc=meuse$zinc))
 coordnames(meuse_pols) <- c("x","y")
 coordinates(meuse) = ~x + y
+meuse_pols$zinc <- exp(over(meuse_pols,GridBAUs1)$mu)
 
 ## ----message=FALSE,echo=FALSE,cache=FALSE,results='hide',warning=FALSE----
 set.seed(1)
@@ -552,15 +551,16 @@ GridBAUs2 <- auto_BAUs(manifold = plane(),     # 2D plane
                      cellsize = c(100,100),   # BAU cellsize
                      type = "grid",           # grid (not hex)
                      data = meuse,            # data around which to create BAUs
-                     convex=-0.05)            # border buffer factor
+                     convex=-0.05,            # border buffer factor
+                     nonconvex_hull = 0)               # convex hull
 GridBAUs2$fs <- 1   # fine-scale variation at BAU level
 G <- auto_basis(manifold = plane(),   # 2D plane
                 data=meuse,           # meuse data
                 nres = 2,             # number of resolutions
-                prune=5,              # prune threshold
                 type = "Gaussian",    # type of basis function
-                regular = 0)          # place irregularly in domain
+                regular = 1,prune=1)          # place regularly in domain
 f <- log(zinc) ~ 1    # formula for SRE model
+meuse_pols$std <- 1
 S <- SRE(f = f,                # formula
          data = list(meuse_pols),   # list of datasets
          BAUs = GridBAUs2,      # BAUs
@@ -671,7 +671,8 @@ ggplot() +
                         data=sim_data,
                         cellsize = c(0.02,0.02),
                         type="grid",
-                        convex = -0.1)
+                        convex = -0.1,
+                        nonconvex_hull=FALSE)
  grid_BAUs$fs = 1
 
   f <- z ~ 1

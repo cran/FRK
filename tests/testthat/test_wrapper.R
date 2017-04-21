@@ -7,9 +7,9 @@ test_that("basic_wrapper",{
     coordinates(Z) = ~x+y
     S <- FRK(f = z~1,
              list(Z),
-             cellsize = c(0.1,0.1),
+             cellsize = c(0.02,0.02),
              n_EM = 2,
-             use_INLA = FALSE)
+             nonconvex_hull = FALSE)
     Pred <- SRE.predict(SRE_model = S,
                         obs_fs = TRUE)
 })

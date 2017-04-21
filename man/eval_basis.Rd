@@ -3,57 +3,59 @@
 \docType{methods}
 \name{eval_basis}
 \alias{eval_basis}
-\alias{eval_basis,Basis,STIDF-method}
-\alias{eval_basis,Basis,SpatialPointsDataFrame-method}
-\alias{eval_basis,Basis,SpatialPolygonsDataFrame-method}
 \alias{eval_basis,Basis,matrix-method}
-\alias{eval_basis,Basis-STIDF-method}
-\alias{eval_basis,Basis-SpatialPointsDataFrame-method}
-\alias{eval_basis,Basis-SpatialPolygonsDataFrame-method}
 \alias{eval_basis,Basis-matrix-method}
-\alias{eval_basis,TensorP_Basis,STFDF-method}
-\alias{eval_basis,TensorP_Basis,STIDF-method}
+\alias{eval_basis,Basis,SpatialPointsDataFrame-method}
+\alias{eval_basis,Basis-SpatialPointsDataFrame-method}
+\alias{eval_basis,Basis,SpatialPolygonsDataFrame-method}
+\alias{eval_basis,Basis-SpatialPolygonsDataFrame-method}
+\alias{eval_basis,Basis,STIDF-method}
+\alias{eval_basis,Basis-STIDF-method}
 \alias{eval_basis,TensorP_Basis,matrix-method}
-\alias{eval_basis,TensorP_Basis-STFDF-method}
-\alias{eval_basis,TensorP_Basis-STIDF-method}
 \alias{eval_basis,TensorP_Basis-matrix-method}
+\alias{eval_basis,TensorP_Basis,STIDF-method}
+\alias{eval_basis,TensorP_Basis-STIDF-method}
+\alias{eval_basis,TensorP_Basis,STFDF-method}
+\alias{eval_basis,TensorP_Basis-STFDF-method}
 \title{Evaluate basis functions}
 \usage{
-eval_basis(basis, s, output = "matrix")
+eval_basis(basis, s)
 
-\S4method{eval_basis}{Basis,matrix}(basis, s, output = "matrix")
+\S4method{eval_basis}{Basis,matrix}(basis, s)
 
-\S4method{eval_basis}{Basis,SpatialPointsDataFrame}(basis, s,
-  output = "matrix")
+\S4method{eval_basis}{Basis,SpatialPointsDataFrame}(basis, s)
 
-\S4method{eval_basis}{Basis,SpatialPolygonsDataFrame}(basis, s,
-  output = "matrix")
+\S4method{eval_basis}{Basis,SpatialPolygonsDataFrame}(basis, s)
 
-\S4method{eval_basis}{Basis,STIDF}(basis, s, output = "matrix")
+\S4method{eval_basis}{Basis,STIDF}(basis, s)
 
-\S4method{eval_basis}{TensorP_Basis,matrix}(basis, s, output = "matrix")
+\S4method{eval_basis}{TensorP_Basis,matrix}(basis, s)
 
-\S4method{eval_basis}{TensorP_Basis,STIDF}(basis, s, output = "matrix")
+\S4method{eval_basis}{TensorP_Basis,STIDF}(basis, s)
 
-\S4method{eval_basis}{TensorP_Basis,STFDF}(basis, s, output = "matrix")
+\S4method{eval_basis}{TensorP_Basis,STFDF}(basis, s)
 }
 \arguments{
 \item{basis}{object of class \code{Basis}}
 
-\item{s}{object of class \code{matrix}, \code{SpatialPointsDataFrame} or \code{SpatialPolygonsDataFrame}}
-
-\item{output}{either a "list" or "matrix", depending on desired output format}
+\item{s}{object of class \code{matrix}, \code{SpatialPointsDataFrame} or \code{SpatialPolygonsDataFrame} containing the spatial locations/footprints}
 }
 \description{
 Evaluate basis functions at points or average functions over polygons.
 }
 \details{
-This function evaluates the basis functions at isolated points, or averages the basis functions over polygons, for computing the matrix \eqn{S}. The latter operation is carried out using Monte Carlo integration with 1000 samples per polygon.
+This function evaluates the basis functions at isolated points, or averages
+the basis functions over polygons, for computing the matrix \eqn{S}. The latter
+operation is carried out using Monte Carlo integration with 1000 samples per polygon. When
+using space-time basis functions, the object MUST contain a field \code{t} containing a numeric
+representation of the time, for example, containing the number of second, hours, or days since the first
+data point.
 }
 \examples{
 library(sp)
 
 ### Create a synthetic dataset
+set.seed(1)
 d <- data.frame(lon = runif(n=1000,min = -179, max = 179),
                 lat = runif(n=1000,min = -90, max = 90),
                 z = rnorm(5000))
@@ -69,4 +71,3 @@ G <- auto_basis(manifold = sphere(),data=d,
 ### Now evaluate basis functions at origin
 S <- eval_basis(G,matrix(c(0,0),1,2))
 }
-

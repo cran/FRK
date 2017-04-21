@@ -15,7 +15,9 @@ test_that("coordinates",{
     Grid1D_df <- auto_BAUs(manifold = real_line(),
                            cellsize = 1,
                            data=data_sp)
-    expect_identical(coordinates(Grid1D_df),as.matrix(data.frame(x=-2:12,y=0)))
+    test_coords <- coordinates(Grid1D_df)
+    row.names(test_coords) <- NULL
+    expect_equal(test_coords,as.matrix(data.frame(x=-2:12,y=0)))
 })
 
 test_that("coordnames_SpaceTime",{
@@ -41,9 +43,8 @@ test_that("coordnames_SpaceTime",{
 
 test_that("Estimate observation error from variogram",{
     data(meuse)
-    meuse$Nobs <- 1
     coordinates(meuse) = ~x+y # change into an sp object
-    suppressWarnings(meuse <- est_obs_error(meuse,variogram.formula = log(zinc)~1))
+    suppressWarnings(meuse <- .est_obs_error(meuse,variogram.formula = log(zinc)~1))
     expect_true("std" %in% names(meuse))
     expect_is(meuse,"SpatialPointsDataFrame")
 
@@ -59,6 +60,12 @@ test_that("Can convert SPDF to DF", {
     df <- SpatialPolygonsDataFrame_to_df(sphere_grid,vars = c("lon","lat"))
     expect_is(df,"data.frame")
     expect_equal(names(df),c("lon","lat","id"))
+    expect_equal(length(unique(df$id)),length(sphere_grid))
+
+    sphere_grid$test <- 1:length(sphere_grid)
+    df <- SpatialPolygonsDataFrame_to_df(sphere_grid,vars = c("lon","lat","test"))
+    expect_is(df,"data.frame")
+    expect_equal(names(df),c("lon","lat","id","test"))
     expect_equal(length(unique(df$id)),length(sphere_grid))
 
 })
@@ -89,8 +96,6 @@ test_that("Options work", {
 test_that("Plotting works", {
     library(ggplot2)
     expect_true({draw_world(); TRUE})
-    expect_true({LinePlotTheme() + geom_point(data=data.frame(x=1,y=1),aes(x,y));TRUE})
-    expect_true({EmptyTheme() + geom_point(data=data.frame(x=1,y=1),aes(x,y));TRUE})
 })
 
 test_that("Date sequencing works", {
@@ -110,4 +115,18 @@ test_that("distR works", {
   D1 <- distR(x,x)
   D2 <- as.matrix(dist(x))
   #expect_lt(sum(D1-D2), 1e-12)
+})
+
+test_that("formula no covariates works", {
+    f1 <- y ~ x + 1
+    f2 <- sin(y) ~ log(x) - 1
+    f3 <- sin(cos(y)) ~ d + r
+
+    f1B <- .formula_no_covars(f1)
+    f2B <- .formula_no_covars(f2)
+    f3B <- .formula_no_covars(f3)
+
+    expect_equal(f1B,formula(y~1))
+    expect_equal(f2B,formula(sin(y)~1))
+    expect_equal(f3B,formula(sin(cos(y))~1))
 })

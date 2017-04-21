@@ -19,13 +19,12 @@ The main options list for the FRK package.
 \code{opts_FRK} is a list containing two functions, \code{set} and \code{get}, which can be used to set options and retrieve options, respectively. Currently \code{FRK} uses four options:
 \itemize{
  \item{"progress":}{ a flag indicating whether progress bars should be displayed or not}
- \item{"verbose":}{ a flag indicating whether certain progress monitors should be shown or not}
+ \item{"verbose":}{ a flag indicating whether certain progress messages should be shown or not}
  \item{"parallel":}{ an integer indicating the number of cores to use. A number 0 or 1 indicates no parallelism}
 }
 }
 \examples{
-opts_FRK$set("parallel",2L)
+opts_FRK$set("progress",1L)
 opts_FRK$get("parallel")
 }
 \keyword{datasets}
-

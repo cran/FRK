@@ -14,7 +14,7 @@ BAUs <- auto_BAUs(manifold = plane(),
                   type = "grid",
                   data = SrDf,
                   convex=-0.3,
-                  use_INLA=FALSE)
+                  nonconvex_hull=FALSE)
 idx1 <- which(cut(BAUs$x,c(2.03,4.06),labels = FALSE) &
                   cut(BAUs$y,c(2.03,4.06),labels = FALSE))
 idx2 <- which(cut(BAUs$x,c(1.03,3.03),labels = FALSE) &
@@ -35,7 +35,7 @@ test_that("observations with large support cover correct BAUs", {
 
 test_that("observations with large support average covariates correctly", {
 
-    SrDf_updated <- map_data_to_BAUs(SrDf,BAUs,av_var=TRUE)
+    SrDf_updated <- map_data_to_BAUs(SrDf,BAUs)
 
     ## Check that covariates are properly averaged and that overlapping obs. work
     obs1x <- mean(BAUs[["x"]][idx1])
