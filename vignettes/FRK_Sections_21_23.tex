@@ -8,7 +8,7 @@ where, for $\svec \in D$, $\tvec(\svec)$ is a vector of spatially-referenced cov
 $$
 \lambda(\svec) = \sum_{l=1}^r \phi_l(\svec)\eta_l + \xi(\svec);\quad \svec \in D,
 $$
-\noindent where $\etab \equiv (\eta_1,\dots,\eta_r)^\top$ is an $r$-variate random vector, and $\phib(\cdot) \equiv (\phi_1(\cdot),\dots,\phi_r(\cdot))^\top$ is an $r$-dimensional vector of pre-specified spatial basis functions. Sometimes, $\phib(\cdot)$ contains basis functions and multiple resolutions (e.g., wavelets) and its elements may or may not have compact support. The basis chosen should be able to adequately reconstruct realisations of $Y(\cdot)$; an empirical spectral-based approach that can ensure this is discussed in \cite{Zammit_2012}.
+\noindent where $\etab \equiv (\eta_1,\dots,\eta_r)^\top$ is an $r$-variate random vector, and $\phib(\cdot) \equiv (\phi_1(\cdot),\dots,\phi_r(\cdot))^\top$ is an $r$-dimensional vector of pre-specified spatial basis functions. Sometimes, $\phib(\cdot)$ contains basis functions of multiple resolutions (e.g., wavelets) and its elements may or may not have compact support. The basis chosen should be able to adequately reconstruct realisations of $Y(\cdot)$; an empirical spectral-based approach that can ensure this is discussed in \cite{Zammit_2012}.
 
 In order to cater for different observation supports, it is convenient to assume a domain of interest $D^G \equiv \{A_i \subset D: i = 1,\dots,N\}$ that contains $N$ small, non-overlapping BAUs \citep{Nguyen_2012}, and $D = \bigcup_{i=1}^N A_i$. The set $D^G$ of BAUs could be thought of as a discretisation, or `tiling,' of the original domain $D$ and typically $N \gg r$. The process $\{Y(\svec): \svec \in D\}$ is then averaged over the BAUs, giving the vector $\Yvec = (Y_i : i = 1,\dots,N)^\top$, where
 
@@ -49,7 +49,7 @@ where $\sigma^2_\xi$ is a parameter to be estimated, and $\{\varv_{\xi,1},\dots,
 \end{equation}
 where $\Tmat \equiv (\tvec_i: i = 1,\dots,N)^\top$, $\xib \equiv (\xi_i : i = 1,\dots,N)^\top$, and $\var(\xib) \equiv \sigma^2_\xi \Vmat_\xi$, where $\Vmat_\xi \equiv \diag(\varv_{\xi,1},\dots,\varv_{\xi,N})$ and known.
 
-We now  assume that the unobserved process, $Y(\cdot)$, is observed with $m$ footprints (possibly overlapping) spanning one or more BAUs, where typically $m \gg r$ (note that both $m > N$ and $N >m$ are possible). We thus define the observation domain as $D^O \equiv \{ \cup_{i \in c_j} A_i : j = 1,\dots,m \}$, where $c_j$ is a non-empty subset of $2^{\{1,\dots,N\}}$, the power set of $\{1,\dots,N\}$. For illustration, consider the simple case of  the discretised domain being made up of three BAUs. Then $D^G = \{A_1,A_2,A_3\}$ and, for example, $D^O = \{B_1, B_2\}$, where $B_1 = A_1 \cup A_2$ and $B_2 = A_3$. Catering for different footprints is important for remote sensing applications in which satellite-instrument footprints can widely differ \citep[e.g.,][]{Nguyen_2012,Zammit_2015}.
+We now  assume that the unobserved process, $Y(\cdot)$, is observed with $m$ footprints (possibly overlapping) spanning one or more BAUs, where typically $m \gg r$ (note that both $m > N$ and $N >m$ are possible). We thus define the observation domain as $D^O \equiv \{ \cup_{i \in c_j} A_i : j = 1,\dots,m \}$, where $c_j$ is a non-empty subset in $2^{\{1,\dots,N\}}$, the power set of $\{1,\dots,N\}$. For illustration, consider the simple case of  the discretised domain being made up of three BAUs. Then $D^G = \{A_1,A_2,A_3\}$ and, for example, $D^O = \{B_1, B_2\}$, where $B_1 = A_1 \cup A_2$ and $B_2 = A_3$. Catering for different footprints is important for remote sensing applications in which satellite-instrument footprints can widely differ \citep[e.g.,][]{Nguyen_2012,Zammit_2015}.
 
 Each $B_j \in D^O$ is either a BAU, or a union of BAUs. Measurement of $\Yvec$ is imperfect: We define the measurement process as noisy measurements of the process averaged over the footprints
 \begin{equation}\label{eq:meas_process}
@@ -57,7 +57,7 @@ Z_j \equiv Z(B_j) = \left(\frac{\sum_{i =1}^N Y_i w_{ij}}{\sum_{i=1}^N w_{ij}}\r
 \end{equation}
 where the weights,
 $$ w_{ij} = |A_i|\mathbb{I}(A_i \subset B_j); \quad i = 1,\dots,N;~~j = 1,\dots, m; ~~B_j \in D^O,$$
-depend on the areas of the BAUs, and $\mathbb{I}(\cdot)$ is the indicator function. Currently BAUs of equal area are assumed.   The random quantities $\{\delta_i\}$ and $\{\epsilon_i\}$ capture the imperfections of the measurement. Better known is the measurement error $\epsilon_i$, which is assumed to be zero-mean Gaussian distributed. The component $\delta_i$ captures any bias in the measurement at the BAU-level, which has the interpretation of a systematic error, and $\{\delta_i\}$ are independent.
+depend on the areas of the BAUs, and $\mathbb{I}(\cdot)$ is the indicator function. Currently, in \pkg{FRK}, BAUs of equal area are assumed.   The random quantities $\{\delta_i\}$ and $\{\epsilon_i\}$ capture the imperfections of the measurement. Better known is the measurement error $\epsilon_i$, which is assumed to be zero-mean Gaussian distributed. The component $\delta_i$ captures any bias in the measurement at the BAU-level, which has the interpretation of a systematic error, and $\{\delta_i\}$ are independent with variance
 
 %Any bias in the measurement is represented by the spatially independent systematic error $\deltab \equiv (\delta_1,\dots,\delta_N)^\top$ with individual variances,
 
@@ -75,12 +75,12 @@ such that
 \begin{equation*}
 \Zvec = \Cmat_Z\Yvec + \Cmat_Z\deltab +  \epsilonb,
 \end{equation*}
-\noindent where $\epsilonb \equiv (\epsilon_j : j = 1,\dots,m)^\top$, and $\var(\epsilonb) = \Sigmamat_\epsilon \equiv \sigma^2_\epsilon\Vmat_\epsilon$ is a diagonal covariance matrix. The matrix $\Sigmamat_\epsilon$ is assumed known from the properties of the measurement process. If it is not known, $\Vmat_\epsilon$ is fixed to $\Imat$ and $\sigma^2_\epsilon$ is estimated using variogram techniques \citep{Kang_2009}.
+\noindent where $\epsilonb \equiv (\epsilon_j : j = 1,\dots,m)^\top$, and $\var(\epsilonb) = \Sigmamat_\epsilon \equiv \sigma^2_\epsilon\Vmat_\epsilon$ is a diagonal covariance matrix. The matrix $\Sigmamat_\epsilon$ is assumed known from the properties of the measurement process. If it is not known, $\Vmat_\epsilon$ is fixed to $\Imat$ and $\sigma^2_\epsilon$ is estimated using variogram techniques \citep{Kang_2009}. The rows of  the matrix $\Cmat_Z$ sum to 1.
 
 % If these errors are also identically distributed, then $\sigma^2_\epsilon = \var(\epsilon_j), j = 1,\dots,m$, can be estimated from the data provided that $\Vmat_\xi$ and $\Vmat_\delta \equiv \diag(\varv_{\delta,1},\dots,\varv_{\delta,N})$ are not proportional to each other.
 
 
-The rows of  the matrix $\Cmat_Z$ sum to 1. It will be convenient, as a consequence of conditional independence, to re-write
+It will be convenient, as a consequence of conditional independence, to re-write
 \begin{equation}\label{eq:Z_collapsed}
 \Zvec = \Tmat_Z\alphab + \Smat_Z\etab + \xib_Z + \deltab_Z + \epsilonb,
 \end{equation}
@@ -90,18 +90,18 @@ where $\Tmat_Z \equiv \Cmat_Z \Tmat$, $\Smat_Z \equiv \Cmat_Z \Smat$, $\xib_Z \e
 \expect(\Zvec) &=\Tmat_Z\alphab + \Smat_Z\etab,\\
 \var(\Zvec) &= \Smat_Z\Kmat\Smat_Z^\top + \sigma^2_\xi\Cmat_Z\Vmat_{\xi}\Cmat_Z^\top +  \sigma^2_\delta\Cmat_Z\Vmat_\delta\Cmat_Z^\top + \sigma^2_\epsilon\Vmat_\epsilon~.
 \end{align*}
-In practice, it is not always possible for each $B_i$ to include entire BAUs. For simplicity, we assume that the observation footprint overlaps a BAU if and only if the BAU centroid lies within the footprint. Frequently, point-referenced data is also supplied. In this case each data point is attributed to a specific BAU and it is possible to have multiple observations of the same BAU.
+In practice, it is not always possible for each $B_i$ to include entire BAUs. For simplicity, in \pkg{FRK} we assume that the observation footprint overlaps a BAU if and only if the BAU centroid lies within the footprint. Frequently, point-referenced data is also supplied. In this case each data point is attributed to a specific BAU and it is possible to have multiple observations of the same BAU.
 
 
 We collect the unknown parameters in the set $\thetab \equiv \{\alphab, \sigma^2_\xi, \sigma^2_\delta, \Kmat\}$ for FRK-V and $\thetab_\circ \equiv \{\alphab, \sigma^2_\xi, \sigma^2_\delta, \varthetab\}$ for FRK-M when $\Kmat = \Kmat_\circ(\varthetab)$; their estimation is the subject of Section \ref{sec:estimation}. If the parameters in $\thetab$ are known, a straightforward inversion allows spatial prediction at any BAU in $D^G$. Estimates of $\thetab$ are substituted into these spatial predictors to yield FRK-V. Similarly, estimates of $\thetab_\circ$ are substituted in to yield FRK-M.
 
-In \pkg{FRK}, we allow the prediction set $D^P$ to be as flexible as $D^O$; specifically, $D^P \subset \{ \cup_{i \in \tilde{c}_k} A_i : k = 1,\dots,N_P \}$, where $\tilde{c}_k$ is a non-empty subset of $2^{\{1,\dots,N\}}$ and $N_P$ is the number of prediction areas. We can thus predict both at the individual BAU level or averages over an area spanning multiple BAUs, and these prediction regions may overlap. We provide the FRK equations in Section \ref{sec:prediction}.
+In \pkg{FRK}, we allow the prediction set $D^P$ to be as flexible as $D^O$; specifically, $D^P \subset \{ \cup_{i \in \tilde{c}_k} A_i : k = 1,\dots,N_P \}$, where $\tilde{c}_k$ is a non-empty subset in $2^{\{1,\dots,N\}}$ and $N_P$ is the number of prediction areas. We can thus predict both at the individual BAU level or averages over an area spanning multiple BAUs, and these prediction regions may overlap. We provide the FRK equations in Section \ref{sec:prediction}.
 
 \subsection{Parameter estimation using an EM algorithm} \label{sec:estimation}
 
 In all its generality, parameter estimation with the model of Section \ref{sec:SREModel} is problematic due to confounding between $\deltab$ and $\xib$. In \pkg{FRK}, the user thus needs to choose where the fine-scale variation sits, either in the observation model \eqref{eq:meas_process} (in which case $\sigma^2_\xi$ is fixed to 0) or in the process model \eqref{eq:Yi1} (in which case $\sigma^2_\delta$ is fixed to 0). We describe below the estimation procedure for the latter case; due to symmetry, the estimation equations of the former case can be obtained by simply replacing the subscript $\xi$ with $\delta$. However, which case is chosen has a considerable impact on the prediction equations (Section \ref{sec:prediction}). Recall that the measurement-error covariance matrix $\Sigmamat_\epsilon$ is assumed known from measurement characteristics, or estimated using variogram techniques prior to estimating the remaining parameters described below.
 
-Consider the case where $\sigma^2_\delta = 0$. We carry out parameter estimation using an expectation maximisation (EM) algorithm \citep[similar to]{Katzfuss_2011,Nguyen_2014} with \eqref{eq:Z_collapsed} as our model. Define the \emph{complete-data} likelihood $L_c(\thetab) \equiv [\etab,\Zvec \mid \thetab]$ (with $\xib_Z$ integrated out), where $[\cdot]$ denotes the probability distribution of its argument. In the E-step, the function
+Consider the case where $\sigma^2_\delta = 0$. We carry out parameter estimation using an expectation maximisation (EM) algorithm \citep[similar to][]{Katzfuss_2011,Nguyen_2014} with \eqref{eq:Z_collapsed} as our model. Define the \emph{complete-data} likelihood $L_c(\thetab) \equiv [\etab,\Zvec \mid \thetab]$ (with $\xib_Z$ integrated out), where $[~\cdot~]$ denotes the probability distribution of its argument. In the E-step, the function
 \begin{equation*}
 Q(\thetab \mid \thetab^{(l)}) \equiv \expect(\ln L_c(\thetab) \mid \Zvec,\thetab^{(l)}),
 \end{equation*}
@@ -174,7 +174,7 @@ ensure that we only deal with vectors of length $m$ and matrices of size $r \tim
 The prediction task is to make inference on the hidden $Y$-process over a set of prediction regions $D^P$. Consider the process $\{Y_P(B_k): k = 1,\dots,N_P\}$, which, similar to the observations, is constructed using the BAUs $\{A_i: i = 1,\dots,N\}$. Here, $N_P$ is the number of areas at which spatial prediction takes places, and is equal to $|D^P|$. Then,
 
 \begin{equation*}
-Y_{P,k} \equiv Y_{P}(B_k) = \left(\frac{\sum_{i =1}^N Y_i \tilde w_{ik}}{\sum_{i=1}^N \tilde w_{kj}}\right); \quad B_k \in D^P.
+Y_{P,k} \equiv Y_{P}(B_k) = \left(\frac{\sum_{i =1}^N Y_i \tilde w_{ik}}{\sum_{i=1}^N \tilde w_{kj}}\right); \quad B_k \in D^P,
 \end{equation*}
 where the weights,
 $$ \tilde w_{ik} = |A_i|\mathbb{I}(A_i \subset B_k); \quad i = 1,\dots,N;~~k = 1,\dots, N_P; ~~B_k \in D^P.$$
@@ -210,12 +210,12 @@ where
 \widehat\Wvec &\equiv \Sigmamat_W\Pimat^\top\Cmat_Z^\top\Sigmamat_\epsilon^{-1}(\Zvec - \Tmat_Z\widehat\alphab),\\%\label{eq:What} \\
 \Sigmamat_W &\equiv (\Pimat^\top \Cmat_Z^\top \Sigmamat_\epsilon^{-1} \Cmat_Z \Pimat + \Lambdamat^{-1})^{-1},\\% \label{eq:Winv}
 \end{align*}
-and the block diagonal matrix $\Lambdamat \equiv \textrm{bdiag}(\widehat\Kmat,\widehat\sigma^{2}_\xi\Vmat_{\xi})$, where $\textrm{bdiag}(\cdot)$ returns a block diagonal matrix of its arguments, and where the arguments are the blocks. Note that all calculations are made after substituting in the EM-estimated parameters.
+and the block diagonal matrix $\Lambdamat \equiv \textrm{bdiag}(\widehat\Kmat,\widehat\sigma^{2}_\xi\Vmat_{\xi})$, where $\textrm{bdiag}(\cdot)$ returns a block diagonal matrix of its matrix arguments. Note that all calculations are made after substituting in the EM-estimated parameters.
 
-For both Cases 1. and 2. it follows that $\expect(\Yvec_P \mid \Zvec) = \Cmat_P\widehat\Yvec$ and
+For both Cases 1 and 2 it follows that $\expect(\Yvec_P \mid \Zvec) = \Cmat_P\widehat\Yvec$ and
 \begin{equation*}%\label{eq:YvecP}
 \var(\Yvec_P \mid \Zvec) = \Cmat_P \Sigmamat_{Y \mid Z} \Cmat_P^\top.
 \end{equation*}
 
-Note that for Case 2. we need to predict $\xib_P$, which is not available at this stage. Since we generally wish to predict at locations other than where we have observations, this quantity is rarely equal to $\xib_Z$; for this reason, $\xib_Z$ was not estimated in Section \ref{sec:estimation}.
+Note that for Case 2 we need to predict $\xib_P$, which is not available at this stage. Since we generally wish to predict at locations other than where we have observations, this quantity is rarely equal to $\xib_Z$; for this reason, $\xib_Z$ was not predicted in Section \ref{sec:estimation}.
 

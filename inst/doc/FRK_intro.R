@@ -147,6 +147,20 @@ g2 <- ggplot() +
 plot(g1)
 plot(g2)
 
+## ------------------------------------------------------------------------
+data(meuse)
+meuse[1:10,"zinc"] <- NA
+
+## ------------------------------------------------------------------------
+meuse2 <- subset(meuse,!is.na(zinc))
+meuse2 <- meuse2[,c("x","y","zinc")]
+coordinates(meuse2) <- ~x+y
+
+## ------------------------------------------------------------------------
+meuse$zinc <- NULL
+coordinates(meuse) <- c("x","y")
+meuse.grid2 <- BAUs_from_points(meuse)
+
 ## ----eval=TRUE-----------------------------------------------------------
 data(AIRS_05_2003)                                          ## Load data
 

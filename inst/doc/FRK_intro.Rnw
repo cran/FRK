@@ -492,6 +492,35 @@ plot(g2)
 @
 
 
+\subsubsection*{Point-level data and predictions}
+
+In many cases, the user has one data object or data frame containing both observations and prediction locations with accompanying covariates. Missing observations are then usually denoted as \texttt{NA}. Since in \pkg{FRK} all covariates are associated with the process, and not the data, the data frame needs to be used to construct (i) a data object without missing values and one that does not contain covariates, and (ii) BAUs at both the observation and prediction locations containing all the covariate locations.
+
+For example, assume we are missing the first 10 points in the \texttt{meuse} dataset.
+
+<<>>=
+data(meuse)
+meuse[1:10,"zinc"] <- NA
+@
+
+\noindent The data object we should use with \pkg{FRK} must not contain the missing values, nor the covariates we will use in the model. Once the data frame is appropriately subsetted, it is then cast as a \code{SpatialPointsDataFrame} as usual.
+
+<<>>=
+meuse2 <- subset(meuse,!is.na(zinc))
+meuse2 <- meuse2[,c("x","y","zinc")]
+coordinates(meuse2) <- ~x+y
+@
+
+The BAUs, on the other hand, should contain all the data and prediction locations, but not the data itself. Their construction is facilitated by the function \code{BAUs\_from\_points} which constructs tiny BAUs around the data and prediction locations.
+
+<<>>=
+meuse$zinc <- NULL
+coordinates(meuse) <- c("x","y")
+meuse.grid2 <- BAUs_from_points(meuse)
+@
+
+\noindent Once the complete-data data frame and the BAUs are constructed from the original data frame, FRK may proceed as shown above. Note that predictions are made at both the unobserved and unobserved locations.
+
 \subsection{The \tt{AIRS} dataset}\label{sec:AIRS}
 
 Modelling on the sphere proceeds in a very similar fashion to the plane, except that a coordinate reference system (CRS) on the surface of the sphere needs to be declared for the data. This is implemented using a \tt{CRS} object with string \tt{"+proj=longlat +ellps=sphere"}.
