@@ -1,7 +1,22 @@
+# FRK: An R Software package for spatial and spatio-temporal prediction
+# with large datasets.
+# Copyright (c) 2017 University of Wollongong
+# Author: Andrew Zammit-Mangion, azm (at) uow.edu.au
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 #' @title AIRS data for May 2003
 #' @description Mid-tropospheric CO2 measurements from the Atmospheric InfraRed Sounder (AIRS).
 #' The data are measurements between 60 degrees S and 90 degrees N at roughly 1:30 pm local
-#' time on 1 May through to 15 May 2003.
+#' time on 1 May through to 15 May 2003. (AIRS does not release data below 60 degrees S.)
 #' @format A data frame with 209631 rows and 7 variables:
 #' \describe{
 #'   \item{year}{year of retrieval}
@@ -21,8 +36,8 @@
 #' @title NOAA maximum temperature data for 1990--1993
 #' @description Maximum temperature data obtained from the National Oceanic and Atmospheric
 #' Administration (NOAA) for a part of the USA between 1990 and 1993 (inclusive).
-#' See http://iridl.ldeo.columbia.edu/SOURCES/.NOAA/.NCDC/.DAILY/.FSOD/.
-#' @format A data frame with 196253 rows and 8 variables:
+#' See http://iridl.ldeo.columbia.edu/ SOURCES/.NOAA/.NCDC/.DAILY/.FSOD/.
+#' @format A data frame with 196,253 rows and 8 variables:
 #' \describe{
 #'   \item{year}{year of retrieval}
 #'   \item{month}{month of retrieval}
@@ -40,15 +55,15 @@
 
 #' @title ISEA Aperture 3 Hexagon (ISEA3H) Discrete Global Grid
 #'
-#' @description The data used here was obtained from
+#' @description The data used here were obtained from
 #' http://webpages.sou.edu/~sahrk/dgg/isea.old/gen/isea3h.html and represent ISEA
 #' discrete global grids (DGGRIDs) generated using the \code{DGGRID} software.
 #' The original .gen files were converted to a data frame using the function \code{dggrid_gen_to_df},
 #' available with the \code{dggrids} package. Only resolutions 0--6 are supplied with \code{FRK}
 #' and note that resolution 0 of ISEA3H is equal to resolution 1 in \code{FRK}. For higher
-#' resolutions please install \code{dggrids} from \code{https://github.com/andrewzm/dggrids}
+#' resolutions \code{dggrids} can be installed from \code{https://github.com/andrewzm/dggrids}
 #' using \code{devtools}.
-#' @format A data frame with 284208 rows and 5 variables:
+#' @format A data frame with 284,208 rows and 5 variables:
 #' \describe{
 #'   \item{id}{grid identification number within the given resolution}
 #'   \item{lon}{longitude coordinate}
@@ -58,7 +73,7 @@
 #'   or whether it is a boundary point of the polygon}
 #' }
 #' @docType data
-#' @references  Sahr, K. (2008) Location coding on icosahedral aperture 3 hexagon discrete global grids. Computers, Environment and Urban Systems, 32, 174--187.
+#' @references  Sahr, K. (2008). Location coding on icosahedral aperture 3 hexagon discrete global grids. Computers, Environment and Urban Systems, 32, 174--187.
 "isea3h"
 
 #' @title World map

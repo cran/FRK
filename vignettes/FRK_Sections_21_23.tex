@@ -1,16 +1,16 @@
 \subsection{The SRE model} \label{sec:SREModel}
 
-Denote the spatial process of interest as $\{Y(\svec) : \svec \in D\}$, where $D$ is our domain of interest. In the following, we assume that $D$ is a spatial domain but extensions to spatio-temporal domains are natural within the framework (Section \ref{sec:ST}). Consider the classical spatial statistical model,
+Denote the spatial process of interest as $\{Y(\svec) : \svec \in D\}$, where $D$ is our domain of interest. In what follows, we assume that $D$ is a spatial domain but extensions to spatio-temporal domains are natural within the framework (Section \ref{sec:ST}). Consider the classical spatial statistical model,
 \begin{equation*}
 Y(\svec) = \tvec(\svec)^\top\alphab + \upsilon(\svec) + \xi(\svec); \quad \svec \in D,
 \end{equation*}
-where, for $\svec \in D$, $\tvec(\svec)$ is a vector of spatially-referenced covariates, $\alphab$ are regression coefficients, $\upsilon(\svec)$ is a small-scale, spatially correlated random effect, and $\xi(\svec)$ is a fine-scale, uncorrelated, random effect. It is natural to let $\E(\upsilon(\cdot)) = \E(\xi(\cdot)) = 0$. Define $\lambda(\cdot) \equiv \upsilon(\cdot) + \xi(\cdot)$. It is the structure of the process $\upsilon(\cdot)$ in terms of a linear combination of a fixed number of spatial basis functions that defines the SRE model for $\lambda(\cdot)$:
+where, for $\svec \in D$, $\tvec(\svec)$ is a vector of spatially referenced covariates, $\alphab$ is a vector of regression coefficients, $\upsilon(\svec)$ is a small-scale, spatially correlated random effect, and $\xi(\svec)$ is a fine-scale, spatially uncorrelated, random effect. It is natural to let $\E(\upsilon(\cdot)) = \E(\xi(\cdot)) = 0$. Define $\lambda(\cdot) \equiv \upsilon(\cdot) + \xi(\cdot)$. It is the structure of the process $\upsilon(\cdot)$ in terms of a linear combination of a fixed number of spatial basis functions that defines the SRE model for $\lambda(\cdot)$:
 $$
 \lambda(\svec) = \sum_{l=1}^r \phi_l(\svec)\eta_l + \xi(\svec);\quad \svec \in D,
 $$
 \noindent where $\etab \equiv (\eta_1,\dots,\eta_r)^\top$ is an $r$-variate random vector, and $\phib(\cdot) \equiv (\phi_1(\cdot),\dots,\phi_r(\cdot))^\top$ is an $r$-dimensional vector of pre-specified spatial basis functions. Sometimes, $\phib(\cdot)$ contains basis functions of multiple resolutions (e.g., wavelets) and its elements may or may not have compact support. The basis chosen should be able to adequately reconstruct realisations of $Y(\cdot)$; an empirical spectral-based approach that can ensure this is discussed in \cite{Zammit_2012}.
 
-In order to cater for different observation supports, it is convenient to assume a domain of interest $D^G \equiv \{A_i \subset D: i = 1,\dots,N\}$ that contains $N$ small, non-overlapping BAUs \citep{Nguyen_2012}, and $D = \bigcup_{i=1}^N A_i$. The set $D^G$ of BAUs could be thought of as a discretisation, or `tiling,' of the original domain $D$ and typically $N \gg r$. The process $\{Y(\svec): \svec \in D\}$ is then averaged over the BAUs, giving the vector $\Yvec = (Y_i : i = 1,\dots,N)^\top$, where
+In order to cater for different observation supports $\{B_j\}$ (defined below), it is convenient to assume a discretised domain of interest $D^G \equiv \{A_i \subset D: i = 1,\dots,N\}$ that is made up of $N$ small, non-overlapping BAUs \citep{Nguyen_2012}, and $D = \bigcup_{i=1}^N A_i$. The set $D^G$ of BAUs is a discretisation, or `tiling,' of the original domain $D$, and typically $N \gg r$. The process $\{Y(\svec): \svec \in D\}$ is then averaged over the BAUs, giving the vector $\Yvec = (Y_i : i = 1,\dots,N)^\top$, where
 
 \begin{equation}\label{eq:Yi0}
 Y_i \equiv \frac{1}{|A_i|}\int_{A_i} Y(\svec) \intd \svec; \quad i = 1,\dots,N,
@@ -32,7 +32,7 @@ $$
 \Smat \equiv \left(\frac{1}{|A_i|}\int_{A_i}\phib(\svec)\intd\svec : i = 1,\dots,N\right)^\top.
 \end{equation*}
 
-In \pkg{FRK}, we assume that $\etab$ is an $r$-dimensional Gaussian vector with mean zero and $r \times r$ covariance matrix $\Kmat$, and estimation of $\Kmat$ is based on likelihood methods. If some structure is imposed on $\var(\etab)$ in terms of parameters $\varthetab$, then $\Kmat = \Kmat_\circ(\varthetab)$ and $\varthetab$ needs to be estimated. Frequently, the resolution of the BAUs is sufficiently fine, and the basis functions are sufficiently smooth, so that $\Smat$ can be approximated:
+In \pkg{FRK}, we assume that $\etab$ is an $r$-dimensional Gaussian vector with mean zero and $r \times r$ covariance matrix $\Kmat$, and estimation of $\Kmat$ is based on likelihood methods; we denote this variant of FRK as FRK-V (where `V' stands for `vanilla'). If some structure is imposed on $\var(\etab)$ in terms of parameters $\varthetab$, then $\Kmat = \Kmat_\circ(\varthetab)$ and $\varthetab$ needs to be estimated; we denote this variant as FRK-M (where `M' stands for `model'). Frequently, the resolution of the BAUs is sufficiently fine, and the basis functions are sufficiently smooth, so that $\Smat$ can be approximated:
 \begin{equation}\label{eq:Sapprox}
 \Smat \approx \left(\phib(\svec_i) : i = 1,\dots,N\right)^\top,
 \end{equation}
@@ -43,13 +43,13 @@ In \pkg{FRK}, we do not directly model $\xi(\svec)$, since we are only intereste
 \begin{equation*}
 \var(\xi_i) = \sigma^2_\xi \varv_{\xi,i},
 \end{equation*}
-where $\sigma^2_\xi$ is a parameter to be estimated, and $\{\varv_{\xi,1},\dots,\varv_{\xi,N}\}$ are known and represent  heteroscedasticity. We further assume that the variables representing the discretised fine-scale variation, $\{\xi_i: i = 1,\dots,N\}$, are independent. From \eqref{eq:Yi1}, we can write
+where $\sigma^2_\xi$ is a parameter to be estimated, and $\{\varv_{\xi,1},\dots,\varv_{\xi,N}\}$ are known and represent  heteroscedasticity. We further assume that the variables representing the discretised fine-scale variation, $\{\xi_i: i = 1,\dots,N\}$, are uncorrelated. From \eqref{eq:Yi1}, we can write
 \begin{equation}\label{eq:SRE_Y}
 \Yvec = \Tmat\alphab + \Smat\etab + \xib,
 \end{equation}
-where $\Tmat \equiv (\tvec_i: i = 1,\dots,N)^\top$, $\xib \equiv (\xi_i : i = 1,\dots,N)^\top$, and $\var(\xib) \equiv \sigma^2_\xi \Vmat_\xi$, where $\Vmat_\xi \equiv \diag(\varv_{\xi,1},\dots,\varv_{\xi,N})$ and known.
+where $\Tmat \equiv (\tvec_i: i = 1,\dots,N)^\top$, $\xib \equiv (\xi_i : i = 1,\dots,N)^\top$, and $\var(\xib) \equiv \sigma^2_\xi \Vmat_\xi$, where $\Vmat_\xi \equiv \diag(\varv_{\xi,1},\dots,\varv_{\xi,N})$ and is known.
 
-We now  assume that the unobserved process, $Y(\cdot)$, is observed with $m$ footprints (possibly overlapping) spanning one or more BAUs, where typically $m \gg r$ (note that both $m > N$ and $N >m$ are possible). We thus define the observation domain as $D^O \equiv \{ \cup_{i \in c_j} A_i : j = 1,\dots,m \}$, where $c_j$ is a non-empty subset in $2^{\{1,\dots,N\}}$, the power set of $\{1,\dots,N\}$. For illustration, consider the simple case of  the discretised domain being made up of three BAUs. Then $D^G = \{A_1,A_2,A_3\}$ and, for example, $D^O = \{B_1, B_2\}$, where $B_1 = A_1 \cup A_2$ and $B_2 = A_3$. Catering for different footprints is important for remote sensing applications in which satellite-instrument footprints can widely differ \citep[e.g.,][]{Nguyen_2012,Zammit_2015}.
+We now  assume that the hidden (or latent) process, $Y(\cdot)$, is observed with $m$ footprints (possibly overlapping) spanning one or more BAUs, where typically $m \gg r$ (note that both $m > N$ and $N >m$ are possible). We thus define the observation domain as $D^O \equiv \{ \cup_{i \in c_j} A_i : j = 1,\dots,m \}$, where $c_j$ is a non-empty set in $2^{\{1,\dots,N\}}$, the power set of $\{1,\dots,N\}$. For illustration, consider the simple case of  the discretised domain being made up of three BAUs. Then $D^G = \{A_1,A_2,A_3\}$ and, for example, $D^O = \{B_1, B_2\}$, where $B_1 = A_1 \cup A_2$ (i.e., $c_1 = \{1,2\}$) and $B_2 = A_3$ (i.e., $c_2 = \{3\}$). Catering for different footprints is important for remote sensing applications in which satellite-instrument footprints can widely differ \citep[e.g.,][]{Zammit_2015}.
 
 Each $B_j \in D^O$ is either a BAU, or a union of BAUs. Measurement of $\Yvec$ is imperfect: We define the measurement process as noisy measurements of the process averaged over the footprints
 \begin{equation}\label{eq:meas_process}
@@ -57,17 +57,17 @@ Z_j \equiv Z(B_j) = \left(\frac{\sum_{i =1}^N Y_i w_{ij}}{\sum_{i=1}^N w_{ij}}\r
 \end{equation}
 where the weights,
 $$ w_{ij} = |A_i|\mathbb{I}(A_i \subset B_j); \quad i = 1,\dots,N;~~j = 1,\dots, m; ~~B_j \in D^O,$$
-depend on the areas of the BAUs, and $\mathbb{I}(\cdot)$ is the indicator function. Currently, in \pkg{FRK}, BAUs of equal area are assumed.   The random quantities $\{\delta_i\}$ and $\{\epsilon_i\}$ capture the imperfections of the measurement. Better known is the measurement error $\epsilon_i$, which is assumed to be zero-mean Gaussian distributed. The component $\delta_i$ captures any bias in the measurement at the BAU-level, which has the interpretation of a systematic error, and $\{\delta_i\}$ are independent with variance
-
+depend on the areas of the BAUs, and $\mathbb{I}(\cdot)$ is the indicator function. Currently, in \pkg{FRK}, BAUs of equal area are assumed, but we give \eqref{eq:meas_process} in its most generality.   The random quantities $\{\delta_i\}$ and $\{\epsilon_i\}$ capture the imperfections of the measurement. Better known is the measurement error $\epsilon_i$, which is assumed to be mean-zero Gaussian distributed. The component $\delta_i$ captures any bias in the measurement at the BAU level, which has the interpretation of a systematic error. That is, $\{\delta_i\}$ are uncorrelated with mean zero and variance
 %Any bias in the measurement is represented by the spatially independent systematic error $\deltab \equiv (\delta_1,\dots,\delta_N)^\top$ with individual variances,
-
 %weight the process averages according to the areas of the BAUs, $\epsilon_j$ is Gaussian measurement error, $\mathbb{I}(\cdot)$ is the indicator function, and $\delta_i$ is spatially-dependent \emph{systematic error} in the measurement.
 \begin{equation*}
 \var(\delta_i) = \sigma^2_\delta \varv_{\delta,i},
 \end{equation*}
 where $\sigma^2_\delta$ is a parameter to be estimated, and $\{\varv_{\delta,1},\dots,\varv_{\delta,N}\}$  represent known heteroscedasticity.
 
-We assume that the observations are conditionally independent, when conditioned on $\Yvec$ \emph{and} $\deltab$. Equivalently the measurement errors $\{\epsilon_j: j = 1,\dots,m\}$, where $m \equiv |D^O|$ is the number of observations, are independent. Represent the data as $\Zvec \equiv (Z_j : j = 1,\dots,m)^\top$. Then, since each element in $D^O$ is the union of subsets of $D^G$, one can construct a matrix
+We assume that the observations are conditionally independent, when conditioned on $\Yvec$ \emph{and} $\deltab$. Equivalently, we assume that the measurement errors $\{\epsilon_j: j = 1,\dots,m\}$, where $m \equiv |D^O|$ is the number of observations, are independent.
+
+Represent the data as $\Zvec \equiv (Z_j : j = 1,\dots,m)^\top$. Then, since each element in $D^O$ is the union of subsets of $D^G$, one can construct a matrix
 $$
 \Cmat_Z \equiv \left(\frac{w_{ij}}{\sum_{l=1}^N w_{lj}} : i = 1,\dots,N; j = 1,\dots,m\right),
 $$
@@ -84,24 +84,23 @@ It will be convenient, as a consequence of conditional independence, to re-write
 \begin{equation}\label{eq:Z_collapsed}
 \Zvec = \Tmat_Z\alphab + \Smat_Z\etab + \xib_Z + \deltab_Z + \epsilonb,
 \end{equation}
-where $\Tmat_Z \equiv \Cmat_Z \Tmat$, $\Smat_Z \equiv \Cmat_Z \Smat$, $\xib_Z \equiv \Cmat_Z \xib$, $\deltab_Z \equiv \Cmat_Z \deltab$, and where $\var(\xib_Z) = \sigma^2_\xi\Vmat_{\xi,Z} \equiv \sigma^2_\xi\Cmat_Z\Vmat_{\xi}\Cmat_Z^\top$ and $\var(\deltab_Z) = \sigma^2_\delta\Vmat_{\delta,Z} \equiv \sigma^2_\delta\Cmat_Z\Vmat_\delta\Cmat_Z^\top$. Then
-
+where $\Tmat_Z \equiv \Cmat_Z \Tmat$, $\Smat_Z \equiv \Cmat_Z \Smat$, $\xib_Z \equiv \Cmat_Z \xib$, $\deltab_Z \equiv \Cmat_Z \deltab$, $\var(\xib_Z) = \sigma^2_\xi\Vmat_{\xi,Z} \equiv \sigma^2_\xi\Cmat_Z\Vmat_{\xi}\Cmat_Z^\top$, $\var(\deltab_Z) = \sigma^2_\delta\Vmat_{\delta,Z} \equiv \sigma^2_\delta\Cmat_Z\Vmat_\delta\Cmat_Z^\top$, and where $\Vmat_\delta \equiv \diag(\varv_{\delta,1},\dots,\varv_{\delta,N})$ is known. Then, recalling that $\expect(\xib_Z) = \expect(\deltab_Z) = \expect(\epsilonb) = \zerob$,
 \begin{align*}
 \expect(\Zvec) &=\Tmat_Z\alphab + \Smat_Z\etab,\\
-\var(\Zvec) &= \Smat_Z\Kmat\Smat_Z^\top + \sigma^2_\xi\Cmat_Z\Vmat_{\xi}\Cmat_Z^\top +  \sigma^2_\delta\Cmat_Z\Vmat_\delta\Cmat_Z^\top + \sigma^2_\epsilon\Vmat_\epsilon~.
+\var(\Zvec) &= \Smat_Z\Kmat\Smat_Z^\top + \sigma^2_\xi\Cmat_Z\Vmat_{\xi}\Cmat_Z^\top +  \sigma^2_\delta\Cmat_Z\Vmat_\delta\Cmat_Z^\top + \sigma^2_\epsilon\Vmat_\epsilon.
 \end{align*}
-In practice, it is not always possible for each $B_i$ to include entire BAUs. For simplicity, in \pkg{FRK} we assume that the observation footprint overlaps a BAU if and only if the BAU centroid lies within the footprint. Frequently, point-referenced data is also supplied. In this case each data point is attributed to a specific BAU and it is possible to have multiple observations of the same BAU.
+In practice, it is not always possible for each $B_j$ to include entire BAUs. For simplicity, in \pkg{FRK} we assume that the observation footprint overlaps a BAU if and only if the BAU centroid lies within the footprint. Frequently, point-referenced data is included in $\Zvec$. In this case, each data point is attributed to a specific BAU and it is possible to have multiple observations of the same BAU.
 
 
-We collect the unknown parameters in the set $\thetab \equiv \{\alphab, \sigma^2_\xi, \sigma^2_\delta, \Kmat\}$ for FRK-V and $\thetab_\circ \equiv \{\alphab, \sigma^2_\xi, \sigma^2_\delta, \varthetab\}$ for FRK-M when $\Kmat = \Kmat_\circ(\varthetab)$; their estimation is the subject of Section \ref{sec:estimation}. If the parameters in $\thetab$ are known, a straightforward inversion allows spatial prediction at any BAU in $D^G$. Estimates of $\thetab$ are substituted into these spatial predictors to yield FRK-V. Similarly, estimates of $\thetab_\circ$ are substituted in to yield FRK-M.
+We collect the unknown parameters in the set $\thetab \equiv \{\alphab, \sigma^2_\xi, \sigma^2_\delta, \Kmat\}$ for FRK-V and $\thetab_\circ \equiv \{\alphab, \sigma^2_\xi, \sigma^2_\delta, \varthetab\}$ for FRK-M for which $\Kmat = \Kmat_\circ(\varthetab)$; their estimation is the subject of Section \ref{sec:estimation}. If the parameters in $\thetab$ or $\thetab_\circ$ are known, an inversion that uses the Sherman--Woodbury identity \citep{Henderson_1981} allows spatial prediction at any BAU in $D^G$. Estimates of $\thetab$ are substituted into these spatial predictors to yield FRK-V. Similarly, estimates of $\thetab_\circ$ substituted into the spatial-prediction equations yield FRK-M.
 
-In \pkg{FRK}, we allow the prediction set $D^P$ to be as flexible as $D^O$; specifically, $D^P \subset \{ \cup_{i \in \tilde{c}_k} A_i : k = 1,\dots,N_P \}$, where $\tilde{c}_k$ is a non-empty subset in $2^{\{1,\dots,N\}}$ and $N_P$ is the number of prediction areas. We can thus predict both at the individual BAU level or averages over an area spanning multiple BAUs, and these prediction regions may overlap. We provide the FRK equations in Section \ref{sec:prediction}.
+In \pkg{FRK}, we allow the prediction set $D^P$ to be as flexible as $D^O$; specifically, $D^P \subset \{ \cup_{i \in \tilde{c}_k} A_i : k = 1,\dots,N_P \}$, where $\tilde{c}_k$ is a non-empty set in $2^{\{1,\dots,N\}}$ and $N_P$ is the number of prediction areas. We can thus predict both at the individual BAU level or averages over an area spanning multiple BAUs, and these prediction regions may overlap. This is an important change-of-support feature of \pkg{FRK}. We provide the FRK equations in Section \ref{sec:prediction}.
 
 \subsection{Parameter estimation using an EM algorithm} \label{sec:estimation}
 
-In all its generality, parameter estimation with the model of Section \ref{sec:SREModel} is problematic due to confounding between $\deltab$ and $\xib$. In \pkg{FRK}, the user thus needs to choose where the fine-scale variation sits, either in the observation model \eqref{eq:meas_process} (in which case $\sigma^2_\xi$ is fixed to 0) or in the process model \eqref{eq:Yi1} (in which case $\sigma^2_\delta$ is fixed to 0). We describe below the estimation procedure for the latter case; due to symmetry, the estimation equations of the former case can be obtained by simply replacing the subscript $\xi$ with $\delta$. However, which case is chosen has a considerable impact on the prediction equations (Section \ref{sec:prediction}). Recall that the measurement-error covariance matrix $\Sigmamat_\epsilon$ is assumed known from measurement characteristics, or estimated using variogram techniques prior to estimating the remaining parameters described below.
+In all its generality, parameter estimation with the model of Section \ref{sec:SREModel} is problematic due to confounding between $\deltab$ and $\xib$. In \pkg{FRK}, the user thus needs to choose where the fine-scale variation sits, either in the observation model \eqref{eq:meas_process} (in which case $\sigma^2_\xi$ is fixed to 0) or in the process model \eqref{eq:Yi1} (in which case $\sigma^2_\delta$ is fixed to 0). We describe below the estimation procedure for the latter case; due to symmetry, the estimation equations of the former case can be simply obtained by replacing the subscript $\xi$ with $\delta$. However, which case is chosen by the user has a considerable impact on the prediction equations (Section \ref{sec:prediction}). Recall that the measurement-error covariance matrix $\Sigmamat_\epsilon$ is assumed known from measurement characteristics, or estimated using variogram techniques prior to estimating the remaining parameters described below. We consider the latter case where $\sigma^2_\delta = 0$. For conciseness, in this section we use $\thetab$ to denote the parameters in both FRK-V and FRK-M, only distinguishing when necessary.
 
-Consider the case where $\sigma^2_\delta = 0$. We carry out parameter estimation using an expectation maximisation (EM) algorithm \citep[similar to][]{Katzfuss_2011,Nguyen_2014} with \eqref{eq:Z_collapsed} as our model. Define the \emph{complete-data} likelihood $L_c(\thetab) \equiv [\etab,\Zvec \mid \thetab]$ (with $\xib_Z$ integrated out), where $[~\cdot~]$ denotes the probability distribution of its argument. In the E-step, the function
+We carry out parameter estimation using an expectation maximisation (EM) algorithm \citep[similar to][]{Katzfuss_2011,Nguyen_2014} with \eqref{eq:Z_collapsed} as our model. Define the \emph{complete-data} likelihood $L_c(\thetab) \equiv [\etab,\Zvec \mid \thetab]$ (with $\xib_Z$ integrated out), where $[~\cdot~]$ denotes the probability distribution of its argument. In the E-step, the function
 \begin{equation*}
 Q(\thetab \mid \thetab^{(l)}) \equiv \expect(\ln L_c(\thetab) \mid \Zvec,\thetab^{(l)}),
 \end{equation*}
@@ -115,14 +114,14 @@ is found. It is straightforward to show that, conditionally,
 \end{equation*}
 where
 \begin{align*}
-\muvec_\eta^{(l)} &= \Sigmamat_\eta^{(l)} \Smat_Z^\top(\Dmat_Z^{-1})^{(l)}(\Zvec - \Tmat_Z\alphab^{(l)}), \\
-\Sigmamat_\eta^{(l)} &= (\Smat_Z^\top(\Dmat_Z^{-1})^{(l)}\Smat_Z + (\Kmat^{-1})^{(l)})^{-1},
+\muvec_\eta^{(l)} &= \Sigmamat_\eta^{(l)} \Smat_Z^\top(\Dmat_Z^{(l)})^{-1}(\Zvec - \Tmat_Z\alphab^{(l)}), \\
+\Sigmamat_\eta^{(l)} &= (\Smat_Z^\top(\Dmat_Z^{(l)})^{-1}\Smat_Z + (\Kmat^{(l)})^{-1})^{-1},
 \end{align*}
-and where $\Dmat_Z^{(l)} \equiv (\sigma^2_\xi)^{(l)} \Vmat_{\xi,Z} + \Sigmamat_\epsilon$~.
+where $\Dmat_Z^{(l)} \equiv (\sigma^2_\xi)^{(l)} \Vmat_{\xi,Z} + \Sigmamat_\epsilon$ and where $\Kmat^{(l)}$ is defined below.
 
 The update for $\alphab$ is
 \begin{equation}
-\alphab^{(l+1)} = (\Tmat_Z^\top (\Dmat_Z^{-1})^{(l+1)} \Tmat_Z)^{-1}\Tmat_Z^\top(\Dmat_Z^{-1})^{(l+1)}(\Zvec - \Smat_Z \muvec_\eta^{(l)}). \label{eq:alpha}
+\alphab^{(l+1)} = (\Tmat_Z^\top (\Dmat_Z^{(l+1)})^{-1} \Tmat_Z)^{-1}\Tmat_Z^\top(\Dmat_Z^{(l+1)})^{-1}(\Zvec - \Smat_Z \muvec_\eta^{(l)}). \label{eq:alpha}
 \end{equation}
 
 In FRK-V, the update for $\Kmat^{(l+1)}$ is
@@ -131,9 +130,9 @@ In FRK-V, the update for $\Kmat^{(l+1)}$ is
 \Kmat^{(l+1)} = \Sigmamat_\eta^{(l)} + \muvec_\eta^{(l)} \muvec_\eta^{(l)^\top},
 \end{equation*}
 
-\noindent while in FRK-M where $\Kmat = \Kmat_\circ(\varthetab)$,
+\noindent while in FRK-M, where recall that $\Kmat = \Kmat_\circ(\varthetab)$, the update is
 \begin{equation*}
-\varthetab^{(l+1)} = \argmax_{\varthetab} \ln| \Kmat_\circ(\varthetab)^{-1}| - \tr(\Kmat_\circ(\varthetab)^{-1}(\Sigmamat_\eta^{(l)} + \muvec_\eta^{(l)} \muvec_\eta^{(l)^\top})).
+\varthetab^{(l+1)} = \argmax_{\varthetab} \ln| \Kmat_\circ(\varthetab)^{-1}| - \tr(\Kmat_\circ(\varthetab)^{-1}(\Sigmamat_\eta^{(l)} + \muvec_\eta^{(l)} \muvec_\eta^{(l)^\top})),
 \end{equation*}
 \noindent which is numerically optimised using the function \code{optim} with $\varthetab^{(l)}$ as the initial vector.
 
@@ -146,15 +145,15 @@ where
 \Omegab \equiv \Smat_Z \Sigmamat_\eta^{(l)} \Smat_Z^\top + \Smat_Z \muvec_\eta^{(l)}\muvec_\eta^{(l)^\top} \Smat_Z^\top - 2\Smat_Z\muvec_\eta^{(l)}(\Zvec - \Tmat_Z\alphab^{(l+1)})^\top + (\Zvec - \Tmat_Z\alphab^{(l+1)})(\Zmat - \Tmat_Z\alphab^{(l+1)})^\top.
 \end{equation}
 
-\noindent The solution to \eqref{eq:sigma2d} is found numerically using \code{uniroot} after the expression for $\alphab^{(l+1)}$ is substituted into \eqref{eq:Omegab}. After $ (\sigma^2)^{(l+1)}$ is found, $\alphab^{(l+1)}$ is found from \eqref{eq:alpha}. Computational simplifications are possible when $\Vmat_{\xi,Z}$ and $\Sigmamat_\epsilon$ are diagonal since then only the diagonal of $\Omegab$ needs to be computed. Further simplifications are possible when $\Vmat_Z$ and $\Sigmamat_\epsilon$ are proportional to the identity matrix, with constants of proportionality $\gamma_1$ and $\gamma_2$, respectively. In this case,
+\noindent The solution to \eqref{eq:sigma2d} is found numerically using \code{uniroot} after the expression for $\alphab^{(l+1)}$ is substituted into \eqref{eq:Omegab}. After $ (\sigma^2)^{(l+1)}$ is found, $\alphab^{(l+1)}$ is found from \eqref{eq:alpha}. Computational simplifications are possible when $\Vmat_{\xi,Z}$ and $\Sigmamat_\epsilon$ are diagonal, since then only the diagonal of $\Omegab$ needs to be computed. Further simplifications are possible when $\Vmat_Z$ and $\Sigmamat_\epsilon$ are proportional to the identity matrix, with constants of proportionality $\gamma_1$ and $\gamma_2$, respectively. In this case,
 \begin{equation*}
 (\sigma^2_\xi)^{(l+1)} = \frac{1}{\gamma_1} \left(\frac{\tr(\Omegab)}{m} - \gamma_2 \right),
 \end{equation*}
-where recall that $m$ is the dimension of the data vector $\Zvec$ and $\alphab^{(l+1)}$ is, in this special case, the ordinary-least-squares estimate given $\muvec_\eta^{(l)}$. These simplifications are used by \pkg{FRK} when possible.
+where recall that $m$ is the dimension of the data vector $\Zvec$ and $\alphab^{(l+1)}$ is, in this special case, the ordinary-least-squares estimate given $\muvec_\eta^{(l)}$ (see \eqref{eq:alpha}). These simplifications are used by \pkg{FRK} when possible.
 
 Convergence of the EM algorithm is assessed using the (\emph{incomplete-data}) log-likelihood function at each iteration,
 \begin{equation*}
-\ln [\Zvec \mid \alphab^{(l)}, \Kmat^{(l)}, (\sigma^2_\xi)^{(l)}] = -\frac{m}{2}\ln 2\pi -\frac{1}{2}\ln |\Sigmamat_Z^{(l)}| - \frac{1}{2}(\Zvec - \Tmat_Z\alphab^{(l)})^\top(\Sigmamat_Z^{-1})^{(l)}(\Zvec - \Tmat_Z\alphab^{(l)}),
+\ln [\Zvec \mid \alphab^{(l)}, \Kmat^{(l)}, (\sigma^2_\xi)^{(l)}] = -\frac{m}{2}\ln 2\pi -\frac{1}{2}\ln |\Sigmamat_Z^{(l)}| - \frac{1}{2}(\Zvec - \Tmat_Z\alphab^{(l)})^\top(\Sigmamat_Z^{(l)})^{-1}(\Zvec - \Tmat_Z\alphab^{(l)}),
 \end{equation*}
 where
 \begin{equation*}
@@ -162,22 +161,22 @@ where
 \end{equation*}
 and recall that $\Dmat_{\xi,Z}^{(l)} \equiv (\sigma_\xi^2)^{(l)}\Vmat_Z + \Sigmamat_\epsilon$. Efficient computation of the log-likelihood is facilitated through the use of the Sherman--Morrison--Woodbury matrix identity and a matrix-determinant lemma \citep[e.g.,][]{Henderson_1981}. Specifically, the operations
 \begin{align*}
-(\Sigmamat_Z^{-1})^{(l)} &= (\Dmat_Z^{-1})^{(l)} - (\Dmat_Z^{-1})^{(l)} \Smat_Z ((\Kmat^{-1})^{(l)} + \Smat^\top_Z (\Dmat_Z^{-1})^{(l)}\Smat_Z)^{-1}\Smat_Z^\top(\Dmat_Z^{-1})^{(l)},\\
-| \Sigmamat_Z^{(l)}  | &= | (\Kmat^{-1})^{(l)} + \Smat_Z^\top(\Dmat_Z^{-1})^{(l)} \Smat_Z | |\Kmat^{(l)} | |\Dmat_Z^{(l)} |,%\label{eq:determinant}
+(\Sigmamat_Z^{(l)})^{-1} &= (\Dmat_Z^{(l)})^{-1} - (\Dmat_Z^{(l)})^{-1} \Smat_Z ((\Kmat^{(l)})^{-1} + \Smat^\top_Z (\Dmat_Z^{(l)})^{-1}\Smat_Z)^{-1}\Smat_Z^\top(\Dmat_Z^{(l)})^{-1},\\
+| \Sigmamat_Z^{(l)}  | &= | (\Kmat^{(l)})^{-1} + \Smat_Z^\top(\Dmat_Z^{(l)})^{-1} \Smat_Z | |\Kmat^{(l)} | |\Dmat_Z^{(l)} |,%\label{eq:determinant}
 \end{align*}
-ensure that we only deal with vectors of length $m$ and matrices of size $r \times r$, where typically the fixed rank $r \ll$ the dataset size $m$.
+ensure that we only deal with vectors of length $m$ and matrices of size $r \times r$, where typically the fixed rank $r \ll m,$ the dataset size.
 
 %To prove \eqref{eq:determinant}, start from the right-hand-side, noting that $| \Sigmamat_Z^{(l)}|  = | \Imat + \Smat_Z^\top(\Dmat_Z^{-1})^{(l)} \Smat_Z \Kmat^{(l)}| |\Dmat_Z^{(l)} |.$ Applying Sylvester's determinant identity, $| \Imat + \Smat_Z^\top(\Dmat_Z^{-1})^{(l)} \Smat_Z \Kmat^{(l)}| \equiv | \Imat +  \Smat_Z \Kmat^{(l)}\Smat_Z^\top(\Dmat_Z^{-1})^{(l)}|$, we see that $| \Sigmamat_Z^{(l)}| =  |\Smat_Z \Kmat^{(l)} \Smat_Z^\top + \Dmat_Z^{(l)}|$, as required.
 
 \subsection{Prediction} \label{sec:prediction}
 
-The prediction task is to make inference on the hidden $Y$-process over a set of prediction regions $D^P$. Consider the process $\{Y_P(B_k): k = 1,\dots,N_P\}$, which, similar to the observations, is constructed using the BAUs $\{A_i: i = 1,\dots,N\}$. Here, $N_P$ is the number of areas at which spatial prediction takes places, and is equal to $|D^P|$. Then,
+The prediction task is to make inference on the hidden $Y$-process over a set of prediction regions $D^P$. Consider the process $\{Y_P(\tilde{B}_k): k = 1,\dots,N_P\}$ which, similar to the observations, is constructed using the BAUs $\{A_i: i = 1,\dots,N\}$. Here, $N_P$ is the number of areas at which spatial prediction takes places, and is equal to $|D^P|$. Then,
 
 \begin{equation*}
-Y_{P,k} \equiv Y_{P}(B_k) = \left(\frac{\sum_{i =1}^N Y_i \tilde w_{ik}}{\sum_{i=1}^N \tilde w_{kj}}\right); \quad B_k \in D^P,
+Y_{P,k} \equiv Y_{P}(\tilde{B}_k) = \left(\frac{\sum_{i =1}^N Y_i \tilde w_{ik}}{\sum_{i=1}^N \tilde w_{kj}}\right); \quad \tilde{B}_k \in D^P,
 \end{equation*}
 where the weights,
-$$ \tilde w_{ik} = |A_i|\mathbb{I}(A_i \subset B_k); \quad i = 1,\dots,N;~~k = 1,\dots, N_P; ~~B_k \in D^P.$$
+$$ \tilde w_{ik} = |A_i|\mathbb{I}(A_i \subset \tilde{B}_k); \quad i = 1,\dots,N;~~k = 1,\dots, N_P; ~~\tilde{B}_k \in D^P.$$
 
 Let $\Yvec_P \equiv (Y_{P,k} : k = 1,\dots,N_P)^\top$. Then, since each element in $D^P$ is the union of subsets of $D^G$, one can construct a matrix,
 \begin{equation}\label{eq:CP}
@@ -187,35 +186,37 @@ the rows of which sum to one, such that
 \begin{equation*}
 \Yvec_P = \Cmat_P\Yvec = \Tmat_P\alphab + \Smat_P\etab + \xib_P,
 \end{equation*}
-where $\Tmat_P \equiv \Cmat_P \Tmat$, $\Smat_P \equiv \Cmat_P \Smat$, $\xib_P \equiv \Cmat_P \xib$ and $\var(\xib_P) = \sigma^2_\xi\Cmat_P\Vmat_\xi\Cmat_P^\top \equiv \sigma^2_\xi\Vmat_{\xi,P}$.  As with the observations, these prediction regions may overlap. In practice, it is not always possible for each $B_i$ to include entire BAUs. In this case, we assume that a prediction region contains a BAU if and only if the BAU centroid lies within the prediction area.
+where $\Tmat_P \equiv \Cmat_P \Tmat$, $\Smat_P \equiv \Cmat_P \Smat$, $\xib_P \equiv \Cmat_P \xib$ and $\var(\xib_P) = \sigma^2_\xi\Cmat_P\Vmat_\xi\Cmat_P^\top \equiv \sigma^2_\xi\Vmat_{\xi,P}$.  As with the observations, these prediction regions may overlap. In practice, it may not always be possible for each $\tilde{B}_i$ to include entire BAUs. In this case, we assume that a prediction region contains a BAU if and only if the BAU centroid lies within the region.
 
-Let $l^*$ denote the EM iteration number at which convergence was reached. The final estimates are then $\widehat\muvec_\eta \equiv \muvec_\eta^{(l^*)}, \widehat\Sigmamat_\eta \equiv \Sigmamat_\eta^{(l^*)}, \widehat\alphab \equiv \alphab^{(l^*)}, \widehat\Kmat \equiv \Kmat^{(l^*)}, \widehat\sigma^2_\xi \equiv (\sigma^2_\xi)^{(l^*)},$ and $\widehat\sigma^2_\delta \equiv (\sigma^2_\delta)^{(l^*)}$. Recall from Section \ref{sec:estimation} that the user needs to attribute excess fine-scale variation to either the measurement process or the physical process. This leads to the following two cases.
+Let $l^*$ denote the EM iteration number at which convergence was reached. The final estimates are then,
+$$\widehat\muvec_\eta \equiv \muvec_\eta^{(l^*)}, \widehat\Sigmamat_\eta \equiv \Sigmamat_\eta^{(l^*)}, \widehat\alphab \equiv \alphab^{(l^*)}, \widehat\Kmat \equiv \Kmat^{(l^*)}, \widehat\sigma^2_\xi \equiv (\sigma^2_\xi)^{(l^*)}, \textrm{~~and~~} \widehat\sigma^2_\delta \equiv (\sigma^2_\delta)^{(l^*)}.$$
+Recall from Section \ref{sec:estimation} that the user needs to attribute excess fine-scale variation to either the measurement process or the physical process. This leads to the following two cases.
 
 {\bf Case 1: $\sigma^2_\xi = 0$.} The prediction vector $\widehat\Yvec_P$ and covariance matrix $\Sigmamat_{Y_P\mid Z}$, corresponding to the first two moments from the predictive distribution $[\Yvec_P \mid \Zvec]$ when $\sigma^2_\xi = 0,$ are
 \begin{align*}
 \widehat\Yvec_P \equiv \expect(\Yvec_P \mid \Zvec) &= \Tmat_P\widehat\alphab + \Smat_P\widehat\muvec_\eta, \\%\label{eq:smooth1}\\
 \Sigmamat_{Y_P \mid Z} \equiv \var(\Yvec_P\mid \Zvec) &= \Smat_P \widehat\Sigmamat_\eta\Smat_P^\top. %\label{eq:smooth2}
 \end{align*}
- Under the assumptions, $[\Yvec_P \mid \Zvec]$ is a $N(\widehat\Yvec_P,\Sigmamat_{Y_P \mid Z})$ distribution. Note that all calculations are made after substituting in the EM-estimated parameters.
+ Under the assumptions taken, $[\Yvec_P \mid \Zvec]$ is a $N(\widehat\Yvec_P,\Sigmamat_{Y_P \mid Z})$ distribution. Note that all calculations are made after substituting in the EM-estimated parameters, and that $\widehat\sigma^2_\delta$ is present in the estimated parameters.
 
 {\bf Case 2: $\sigma^2_\delta = 0$ (Default).} To cater for arbitrary observation and prediction support, we predict $\Yvec_P$ by first carrying out prediction over the full vector $\Yvec$, that is, at the BAU level, and then transforming linearly through the use of the matrix $\Cmat_P$. It is easy to see that if $\widehat\Yvec$ is an optimal (squared-error-loss matrix criterion) predictor of $\Yvec$, then $\Amat\widehat\Yvec$ is an optimal predictor of $\Amat\Yvec$, where $\Amat$ is any matrix with $N$ columns.
 
-Let $\Wvec \equiv (\etab^\top,\xib^\top)^\top$ and $\Pimat \equiv (\Smat,\Imat)$. Then \eqref{eq:SRE_Y} can be re-written as $\Yvec = \Tmat\alphab + \Pimat\Wvec$ and
+Let $\Wvec \equiv (\etab^\top,\xib^\top)^\top$ and $\Pimat \equiv (\Smat,\Imat)$. Then \eqref{eq:SRE_Y} can be re-written as $\Yvec = \Tmat\alphab + \Pimat\Wvec$, and
 \begin{align}
 \widehat\Yvec \equiv \expect(\Yvec \mid \Zvec) &= \Tmat\widehat\alphab + \Pimat\widehat\Wvec, \nonumber \\
 \Sigmamat_{Y \mid Z} \equiv \var(\Yvec \mid \Zvec) &= \Pimat \Sigmamat_W\Pimat^\top, \label{eq:Sigma_YZ}
 \end{align}
-where
+for
 \begin{align*}
 \widehat\Wvec &\equiv \Sigmamat_W\Pimat^\top\Cmat_Z^\top\Sigmamat_\epsilon^{-1}(\Zvec - \Tmat_Z\widehat\alphab),\\%\label{eq:What} \\
 \Sigmamat_W &\equiv (\Pimat^\top \Cmat_Z^\top \Sigmamat_\epsilon^{-1} \Cmat_Z \Pimat + \Lambdamat^{-1})^{-1},\\% \label{eq:Winv}
 \end{align*}
-and the block diagonal matrix $\Lambdamat \equiv \textrm{bdiag}(\widehat\Kmat,\widehat\sigma^{2}_\xi\Vmat_{\xi})$, where $\textrm{bdiag}(\cdot)$ returns a block diagonal matrix of its matrix arguments. Note that all calculations are made after substituting in the EM-estimated parameters.
+and the block-diagonal matrix $\Lambdamat \equiv \textrm{bdiag}(\widehat\Kmat,\widehat\sigma^{2}_\xi\Vmat_{\xi})$, where $\textrm{bdiag}(\cdot)$ returns a block diagonal matrix of its matrix arguments. Note that all calculations are made after substituting in the EM-estimated parameters.
 
 For both Cases 1 and 2 it follows that $\expect(\Yvec_P \mid \Zvec) = \Cmat_P\widehat\Yvec$ and
-\begin{equation*}%\label{eq:YvecP}
+\begin{equation}\label{eq:YvecP}
 \var(\Yvec_P \mid \Zvec) = \Cmat_P \Sigmamat_{Y \mid Z} \Cmat_P^\top.
-\end{equation*}
+\end{equation}
 
-Note that for Case 2 we need to predict $\xib_P$, which is not available at this stage. Since we generally wish to predict at locations other than where we have observations, this quantity is rarely equal to $\xib_Z$; for this reason, $\xib_Z$ was not predicted in Section \ref{sec:estimation}.
+Note that for Case 2 we need to obtain predictions for $\xib_P$ which, unlike those for $\etab$, are not a biproduct of the EM algorithm of \ref{sec:estimation}. Sparse-matrix operations are used to facilitate the computation of \eqref{eq:YvecP} when possible.% is not available at this stage. Since we generally wish to predict at locations other than where we have observations, this quantity is rarely equal to $\xib_Z$; for this reason, $\xib_Z$ was not predicted in Section \ref{sec:estimation}.
 

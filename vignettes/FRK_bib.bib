@@ -8,10 +8,19 @@
   publisher={Chapman \& Hall, London, UK}
 }
 
+@Manual{FRK,
+    title = {FRK: Fixed Rank Kriging},
+    author = {Andrew Zammit-Mangion},
+    year = {2017},
+    note = {R package version 0.1.4},
+    url = {https://CRAN.R-project.org/package=FRK}
+  }
+
+
 @article{Henderson_1981,
   title={On deriving the inverse of a sum of matrices},
   author={Henderson, H.V. and Searle, S.R.},
-  journal={Siam Review},
+  journal={{SIAM} Review},
   volume={23},
   pages={53--60},
   year={1981}
@@ -104,11 +113,11 @@
   publisher={Taylor \& Francis}
 }
 
-@misc{SuiteSparse,
+@Manual{SuiteSparse,
   author = {Davis, T.},
   title = {{SPARSEINV: a MATLAB toolbox for computing the sparse inverse subset using the Takahashi equations}},
   year = 2011,
-  note = {\texttt{http://faculty.cse.tamu.edu/davis/suitesparse.html}, Online: Last accessed 01 February 2016}
+  url = {http://faculty.cse.tamu.edu/davis/suitesparse.html}
 }
 
 @article{Sampson_1992,
@@ -184,7 +193,7 @@
 
 @article{Wikle_2005,
   title={Combining information across spatial scales},
-  author={Wikle, C.K. and Berliner, L.M.},
+  author={Wikle, C. K. and Berliner, L. M.},
   journal={Technometrics},
   year={2005},
   volume=47,
@@ -205,7 +214,7 @@
 @article{Cressie_2008,
         author={Cressie, N. and Johannesson, G.},
         year={2008},
-        title={{Fixed Rank Kriging} for very large spatial data sets},
+        title={Fixed rank kriging for very large spatial data sets},
         journal={Journal of the Royal Statistical Society B},
         volume={70},
         pages={209--226}
@@ -222,7 +231,7 @@
 }
 
 @article{Cressie_2010,
-  title={{Fixed Rank Filtering for spatio-temporal data}},
+  title={Fixed rank filtering for spatio-temporal data},
   author={Cressie, N. and Shi, T. and Kang, E.L.},
   journal={Journal of Computational and Graphical Statistics},
   volume={19},
@@ -245,8 +254,9 @@
   title={Parallel inference for massive distributed spatial data using low-rank models},
   author={Katzfuss, M. and Hammerling, D.},
   journal={Statistics and Computing},
-  note={doi:10.1007/s11222-016-9627-4},
-  year={2016}
+  volume = {27},
+  pages = {363--375},
+  year={2017}
 }
 
 @article{Zammit_2012,
@@ -264,7 +274,6 @@
   author={Gneiting, Tilmann and Balabdaoui, Fadoua and Raftery, Adrian E},
   journal={Journal of the Royal Statistical Society B},
   volume={69},
-  number={2},
   pages={243--268},
   year={2007},
   publisher={Wiley Online Library}
@@ -297,11 +306,13 @@
     url = {https://CRAN.R-project.org/package=devtools},
   }
 
-@misc{OCO2_2017,
+
+@Manual{OCO2_2017,
   author = {{OCO-2 Science Team} and Michael Gunson and Annemarie Eldering},
   title = {{OCO-2 Level 2 bias-corrected XCO2 and other select fields from the full-physics retrieval aggregated as daily files, Retrospective processing V7r}},
   year = 2015,
-  note = {Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC) \texttt{https://disc.gsfc.nasa.gov/datacollection/OCO2\_L2\_Lite\_FP\_7r.html}, Online: Last accessed 21 April 2017}
+  note = {Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC)},
+  url={https://disc.gsfc.nasa.gov/datacollection/OCO2_L2_Lite_FP_7r.html}
 }
 
 @book{Xie_2015,
@@ -342,10 +353,10 @@
 }
 
 @article{Takahashi_1973,
-  title={Formation of a sparse bus impedance matrix and its application fo short circuit study},
+  title={Formation of a sparse bus impedance matrix and its application to short circuit study},
   author={Takahashi, Kazuhira and Fagan, John and Chin, Mo-Shing},
   journal={8th PICA Conf. Proc.},
-  note={June 4--6, Minneapolis, Minn.},
+  note={June 4--6, Minneapolis, MN},
   year={1973}
   }
 
@@ -372,7 +383,7 @@
 @book{Bivand_2013,
   author={Bivand, R S and Pebesma, E and Gomez-Rubio, V},
   year={2013},
-  title={{Applied spatial data analysis with R}},
+  title={{Applied Spatial Data Analysis with R}},
   edition={2nd},
   publisher={Springer-Verlag},
   address={New York, NY}

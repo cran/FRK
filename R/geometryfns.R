@@ -1,3 +1,18 @@
+# FRK: An R Software package for spatial and spatio-temporal prediction
+# with large datasets.
+# Copyright (c) 2017 University of Wollongong
+# Author: Andrew Zammit-Mangion, azm (at) uow.edu.au
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 #' @title manifold
 #' @param .Object \code{manifold} object passed up from lower-level constructor
 #' @description Manifold initialisation. This function should not be called directly as \code{manifold} is a virtual class.
@@ -97,7 +112,7 @@ setMethod("initialize",signature="sphere",function(.Object,radius=1,measure=gc_d
 #' @title Space-time sphere
 #' @description Initialisation of a 2-sphere (S2) with a temporal dimension
 #' @param radius radius of sphere
-#' @details As with the spatial-only sphere, the sphere surface is initialised using a \code{radius} parameter. The default value of the radius \code{R} is \code{R}=6371 km, the Earth's radius, while the measure used to compute distances on the sphere is the great-circle distance on a sphere of radius \code{R}. Euclidean geometry is used to factor in the time component, so that dist((s1,t1),(s2,t2)) = sqrt(gc_dist(s1,s2)^2 + (t1 - t2)^2).
+#' @details As with the spatial-only sphere, the sphere surface is initialised using a \code{radius} parameter. The default value of the radius \code{R} is \code{R}=6371, which is the Earth's radius in km, while the measure used to compute distances on the sphere is the great-circle distance on a sphere of radius \code{R}. By default Euclidean geometry is used to factor in the time component, so that dist((s1,t1),(s2,t2)) = sqrt(gc_dist(s1,s2)^2 + (t1 - t2)^2). Frequently this distance can be used since separate correlation length scales for space and time  are estimated in the EM algorithm (that effectively scale space and time separately).
 #' @export
 #' @examples
 #' S <- STsphere()
@@ -284,16 +299,16 @@ setMethod("coordnames",signature(x="STIDF"),function(x) {
 #' @param isea3h_res resolution number of the isea3h DGGRID cells for when type is ``hex'' and manifold is the surface of a \code{sphere}
 #' @param data object of class \code{SpatialPointsDataFrame}, \code{SpatialPolygonsDataFrame},  \code{STIDF}, or \code{STFDF}. Provision of \code{data} implies that the domain is bounded, and is thus necessary when the manifold is a \code{real_line, plane}, or \code{STplane}, but is not necessary when the manifold is the surface of a \code{sphere}
 #' @param nonconvex_hull flag indicating whether to use \code{INLA} to generate a non-convex hull. Otherwise a convex hull is used
-#' @param convex convex parameter used for smoothing an extended boundary when working on a bounded domain (that is, when the object \code{data} is supplied), see details.
-#' @param tunit temporal unit when requiring space-time BAUs. Can be either "secs", "mins", "hours" or "days".
-#' @param xlims limits of the horizontal axis (overrides automatic selection).
-#' @param ylims limits of the vertical axis (overrides automatic selection).
+#' @param convex convex parameter used for smoothing an extended boundary when working on a bounded domain (that is, when the object \code{data} is supplied); see details
+#' @param tunit temporal unit when requiring space-time BAUs. Can be either "secs", "mins", "hours" or "days"
+#' @param xlims limits of the horizontal axis (overrides automatic selection)
+#' @param ylims limits of the vertical axis (overrides automatic selection)
 #' @param ... currently unused
 #' @details \code{auto_BAUs} constructs a set of Basic Areal Units (BAUs) used both for data pre-processing and for prediction. As such, the BAUs need to be of sufficienly fine resolution so that inferences are not affected due to binning.
 #'
-#' Two types of BAUs are supported by \code{FRK}: ``hex'' (hexagonal) and ``grid'' (rectangular). In order to have a ``grid'' set of BAUs, the user should specify a cellsize of length one, or of length equal to the dimensions of the manifold, that is, of length 1 for \code{real_line} and 2 for the surface of a \code{sphere} and \code{plane}. When a ``hex'' set of BAUs is desired, the first element of \code{cellsize} is used to determine the side length by dividing this value by approximately 2. The argument \code{type} is ignored with \code{real_line} and ``hex'' is not available for this manifold.
+#' Two types of BAUs are supported by \code{FRK}: ``hex'' (hexagonal) and ``grid'' (rectangular). In order to have a ``grid'' set of BAUs, the user should specify a cellsize of length one, or of length equal to the dimensions of the manifold, that is, of length 1 for \code{real_line} and of length 2 for the surface of a \code{sphere} and \code{plane}. When a ``hex'' set of BAUs is desired, the first element of \code{cellsize} is used to determine the side length by dividing this value by approximately 2. The argument \code{type} is ignored with \code{real_line} and ``hex'' is not available for this manifold.
 #'
-#'   If the object \code{data} is provided, then automatic domain selection may be carried out by employing the \code{INLA} function \code{inla.nonconvex.hull}, which finds a (non-convex) hull surrounding the data points (or centroids of the data polygons). This domain is extended and smoothed using the \code{convex} parameter. The parameter \code{convex} should be negative, and a larger absolute value for \code{convex} results in a larger domain with smoother boundaries (note that \code{INLA} was not available on CRAN at time of writing).
+#'   If the object \code{data} is provided, then automatic domain selection may be carried out by employing the \code{INLA} function \code{inla.nonconvex.hull}, which finds a (non-convex) hull surrounding the data points (or centroids of the data polygons). This domain is extended and smoothed using the parameter \code{convex}. The parameter \code{convex} should be negative, and a larger absolute value for \code{convex} results in a larger domain with smoother boundaries (note that \code{INLA} was not available on CRAN at the time of writing).
 #' @examples
 #' ## First a 1D example
 #' library(sp)
@@ -699,7 +714,7 @@ setMethod("auto_BAU",signature(manifold="sphere"),
                   isea3h <- res <- lon <- centroid <- lat <- in_chull <- NULL
 
                   ## Load the discrete global grids at the desired resolution. This can be either
-                  ## from the data in FRK or the dggrids package (depending on how high the resolution is)
+                  ## from the data in FRK or the dggrids package (depending on how fine the resolution is)
                   isea3h <- load_dggrids(res=resl)
 
                   ## Split the ISEA3H across the 180 degree boundary using process_isea3h
@@ -931,7 +946,7 @@ df_to_SpatialPolygons <- function(df,keys,coords,proj) {
 #' @description Convert \code{SpatialPolygonsDataFrame} object to data frame.
 #' @param sp_polys object of class \code{SpatialPolygonsDataFrame}
 #' @param vars variables to put into data frame (by default all of them)
-#' @details This function is mainly used for plotting \code{SpatialPolygonsDataFrame} objects with \code{ggplot} rather than \code{spplot}. The coordinates of each polygon are extracted and concatenated into one long data frame. The attributes of each polygon are then attached to this data frame as variables which vary by polygon \code{id} (the rownames of the object).
+#' @details This function is mainly used for plotting \code{SpatialPolygonsDataFrame} objects with \code{ggplot} rather than \code{spplot}. The coordinates of each polygon are extracted and concatenated into one long data frame. The attributes of each polygon are then attached to this data frame as variables that vary by polygon \code{id} (the rownames of the object).
 #' @export
 #' @examples
 #' library(sp)
@@ -987,10 +1002,9 @@ SpatialPolygonsDataFrame_to_df <- function(sp_polys,vars = names(sp_polys)) {
 #' @rdname BAUs_from_points
 #' @aliases BAUs_from_points,SpatialPoints-method
 setMethod("BAUs_from_points",signature(obj = "SpatialPoints"),
-          function(obj) {
+          function(obj, offset = 1e-10) {
 
     sp_obj_pols <- NULL                 # Initialise polygons
-    offset <- 10*.Machine$double.eps    # Side size of BAU (very small)
     cnames <- coordnames(obj)           # coordinate names
     coords <- coordinates(obj)          # coordinates of SpatialPoints
 
@@ -1027,7 +1041,7 @@ setMethod("BAUs_from_points",signature(obj = "SpatialPoints"),
 #' @rdname BAUs_from_points
 #' @aliases BAUs_from_points,ST-method
 setMethod("BAUs_from_points",signature(obj = "ST"),
-          function(obj) {
+          function(obj, offset = 1e-10) {
              print("BAUs from points for space-time data not yet implemented. Please contact
                    the package maintainer.")
           })
@@ -1454,12 +1468,12 @@ load_dggrids <- function (res = 3L){
     if(!is.numeric(res))
         stop("res needs to be an integer or vector of integers")
 
-    ## We ship dggrids at res 6 or less with FRK. Higher resolutions are available with the dggrids package
+    ## We ship dggrids at res 6 or less with FRK. Finer resolutions are available with the dggrids package
     if(all(res <= 6L))  {
         data(isea3h, envir=environment(),package="FRK")  # load ISEA3h from FRK
     } else {
         if(!requireNamespace("dggrids")) {
-            stop("Such high DGGRID resolutions are not
+            stop("Such fine DGGRID resolutions are not
                                        shipped with the package FRK. For this
                                        resolution please download and install the
                                        package dggrids from https://github.com/andrewzm/dggrids")

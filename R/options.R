@@ -1,3 +1,18 @@
+# FRK: An R Software package for spatial and spatio-temporal prediction
+# with large datasets.
+# Copyright (c) 2017 University of Wollongong
+# Author: Andrew Zammit-Mangion, azm (at) uow.edu.au
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 ## initialise options: Run when FRK is loaded
 new_opts_FRK <- function(d = list(progress = TRUE, verbose = FALSE, parallel=1L)) {
     defaults = d                               # detauls to showing progress bars, no verbose and single core computation
@@ -32,7 +47,7 @@ new_opts_FRK <- function(d = list(progress = TRUE, verbose = FALSE, parallel=1L)
 #'   \item{\code{$}  }{\code{set:function(opt,value)}}
 #'   \item{\code{$}  }{\code{get:function(opt)}}
 #' }
-#' @details \code{opts_FRK} is a list containing two functions, \code{set} and \code{get}, which can be used to set options and retrieve options, respectively. Currently \code{FRK} uses four options:
+#' @details \code{opts_FRK} is a list containing two functions, \code{set} and \code{get}, which can be used to set options and retrieve options, respectively. Currently \code{FRK} uses three options:
 #' \itemize{
 #'  \item{"progress":}{ a flag indicating whether progress bars should be displayed or not}
 #'  \item{"verbose":}{ a flag indicating whether certain progress messages should be shown or not}
