@@ -1,7 +1,7 @@
 Package: FRK
 Type: Package
 Title: Fixed Rank Kriging
-Version: 0.1.5
+Version: 0.1.6
 Date: 2017-05-25
 Authors@R: c(
     person("Andrew", "Zammit-Mangion", , "andrewzm@gmail.com", c("aut", "cre")),
@@ -26,7 +26,7 @@ Depends: R (>= 3.1)
 Suggests: covr, gstat, INLA, knitr, mapproj, parallel, rgeos, spdep,
         splancs, testthat, verification
 Imports: digest, dplyr, ggplot2, grDevices, Hmisc, Matrix, methods,
-        plyr, Rcpp, sp, spacetime, stats, utils
+        plyr, Rcpp (>= 0.12.12), sp, spacetime, stats, utils
 Enhances: dggrids
 Additional_repositories: https://andrewzm.github.io/dggrids-repo,
         http://www.math.ntnu.no/inla/R/stable
@@ -35,11 +35,11 @@ NeedsCompilation: yes
 LazyData: true
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp
-Packaged: 2017-08-08 08:10:02 UTC; andrew
+Packaged: 2017-10-13 02:54:33 UTC; andrew
 Author: Andrew Zammit-Mangion [aut, cre],
   Timothy Davis [ctb],
   Patrick Amestoy [ctb],
   Iain Duff [ctb],
   John K. Reid [ctb]
 Repository: CRAN
-Date/Publication: 2017-08-08 14:37:31 UTC
+Date/Publication: 2017-10-13 21:06:18 UTC
