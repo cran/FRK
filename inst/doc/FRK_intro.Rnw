@@ -441,7 +441,7 @@ plot(g1)
 plot(g2)
 @
 
-Now, assume that we wish to predict over regions encompassing several BAUs such that the matrix $\Cmat_P$ containes multiple non-zeros per row. Then we need to set the \tt{pred\_polys} argument in the function \tt{auto\_BAUs}. First, we create this larger regionalisation as follows
+Now, assume that we wish to predict over regions encompassing several BAUs such that the matrix $\Cmat_P$ containes multiple non-zeros per row. Then we need to set the \tt{newdata} argument in the function \tt{auto\_BAUs}. First, we create this larger regionalisation as follows
 
 <<>>=
 Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
@@ -457,14 +457,15 @@ Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
 
 <<>>=
 Pred_regions <- SRE.predict(SRE_model = S,                # SRE model
-                            pred_polys = Pred_regions)    # prediction polygons
+                            newdata = Pred_regions)    # prediction polygons
 @
 
 \noindent The prediction and its standard error can be visualised as before. These plots are shown in Fig.~\ref{fig:PredictionPolygon}.
 
 <<echo=FALSE,fig.cap="Prediction and prediction standard error obtained with FRK from the \\tt{meuse} dataset over arbitrary polygons. Both quantities are logs of ppm.\\label{fig:PredictionPolygon}",fig.subcap=c("",""),fig.width=6,fig.height=7.5,out.width="0.5\\linewidth",fig.pos="t">>=
-Pred_regions_df <- SpatialPolygonsDataFrame_to_df(sp_polys = Pred_regions,
-                                          vars = c("mu","var"))
+Pred_regions_df <- SpatialPolygonsDataFrame_to_df(
+    sp_polys = as(Pred_regions, "SpatialPolygonsDataFrame"),
+    vars = c("mu","var"))
 
 g1 <- ggplot() +
     geom_polygon(data=Pred_regions_df,

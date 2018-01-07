@@ -117,11 +117,12 @@ Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
 
 ## ------------------------------------------------------------------------
 Pred_regions <- SRE.predict(SRE_model = S,                # SRE model
-                            pred_polys = Pred_regions)    # prediction polygons
+                            newdata = Pred_regions)    # prediction polygons
 
 ## ----echo=FALSE,fig.cap="Prediction and prediction standard error obtained with FRK from the \\tt{meuse} dataset over arbitrary polygons. Both quantities are logs of ppm.\\label{fig:PredictionPolygon}",fig.subcap=c("",""),fig.width=6,fig.height=7.5,out.width="0.5\\linewidth",fig.pos="t"----
-Pred_regions_df <- SpatialPolygonsDataFrame_to_df(sp_polys = Pred_regions,
-                                          vars = c("mu","var"))
+Pred_regions_df <- SpatialPolygonsDataFrame_to_df(
+    sp_polys = as(Pred_regions, "SpatialPolygonsDataFrame"),
+    vars = c("mu","var"))
 
 g1 <- ggplot() +
     geom_polygon(data=Pred_regions_df,

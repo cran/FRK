@@ -523,13 +523,21 @@ auto_BAU_time <- function (manifold,type="grid",cellsize = 1,resl=resl,d=NULL,co
     ## From which we can extract a range and the duration
     trange <- range(tpoints) # e.g., 1st January 2017, 4th January 2017
     dranget <- diff(trange)  # e.g., 4 days duration
+    #dt <- as.difftime(cellsize, units = tunit) # time block size
 
     ## The time spacing
     tspacing <- paste(cellsize,tunit)      # e.g., paste(1,"days")
-    tgrid <- seq(trunc(trange[1],tunit),   # create grid based on range and spacing by truncating
-                 ceil(trange[2],tunit),    # to this time unit (e.g., "days")
-                 by=tspacing)              # and making the interval equal to tunit
-    tgrid <- round(tgrid,tunit)            # Finally round to the time unit (probably not needed)
+    tgrid <- seq(truncPOSIXt(trange[1],tunit), # create grid based on range and spacing by truncating
+                 ceil(trange[2]+1,tunit),      # to this time unit (e.g., "days")
+                 by=tspacing)                  # and making the interval equal to tunit
+
+    ## Finally round to the time unit (probably not needed)
+    tgrid <- suppressWarnings(roundPOSIXt(tgrid, tunit))
+
+    ## NOTE: A suppresswarnings is needed since there seems to be a bug
+    ## in trunc.POSIXt when using units faster than days and more than
+    ## one element as input. This warning has no adverse affects as far
+    ## as I can see.
 
     ## Ensure it's POSIXct, which is what FRK uses
     tgrid <- as.POSIXct(tgrid)
@@ -1157,6 +1165,7 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPolygons"),
 
               ## Attach the ID of the data polygon to the data frame
               data_sp$id <- row.names(data_sp)
+              data_sp$id <- as.character(data_sp$id)
 
               ## Assume the BAUs are so small that it is sufficient to see whether the
               ## BAU centroid falls in the data polygon. To do this we first make
@@ -1173,10 +1182,12 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPolygons"),
               BAUs_aux_data <- .parallel_over(data_sp,BAU_as_points,fn=.safe_mean)
 
               ## Now include the ID in the table so we merge by it later
-              BAUs_aux_data$id <- row.names(BAUs_aux_data)
+              BAUs_aux_data$id <- as.character(row.names(BAUs_aux_data))
 
               ## Do the merging
-              updated_df <- left_join(data_sp@data,BAUs_aux_data,by="id")
+              updated_df <- left_join(data_sp@data,
+                                      BAUs_aux_data,
+                                      by="id")
 
               ## Make sure the rownames are OK
               row.names(updated_df) <- data_sp$id
@@ -1186,6 +1197,21 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPolygons"),
 
               ## Return Spatial object
               data_sp
+          })
+
+## Map the data to the BAUs. This is done after BAU construction
+## data_sp: data (SpatialPixels object)
+## sp_pols: BAUs (SpatialPolygonsDataFrame or SpatialPixelsDataFrame)
+## average_in_BAU: flag indicating whether we want to average data/standard errors in BAUs
+#' @aliases map_data_to_BAUs,Spatial-method
+setMethod("map_data_to_BAUs",signature(data_sp="SpatialPixels"),
+          function(data_sp,sp_pols,average_in_BAU = TRUE) {
+              if(is(data_sp, "SpatialPixels")) {
+                  data_sp <- as(data_sp, "SpatialPolygons")
+              } else {
+                  data_sp <- as(data_sp, "SpatialPolygonsDataFrame")
+              }
+              map_data_to_BAUs(data_sp, sp_pols, average_in_BAU = average_in_BAU)
           })
 
 ## Returns either a STIDF with the data at the BAU centroids (if data_sp is STIDF)
@@ -1218,15 +1244,10 @@ setMethod("map_data_to_BAUs",signature(data_sp="ST"),
                                           ## Then mark the beginning of the next time interval as the end of this one
                                           t2 <- time(sp_pols)[i+1]
 
-                                          ## Now form a time range based on this interval, where we have subtracted
-                                          ## one second so there is no overlap (minimum unit is always seconds)
-                                          trange <- paste0(format(t1),"::",format(t2-1))
                                       } else {
 
-                                          ## If we are the last time interval then make sure we capture all the data
-                                          ## by taking the maximum of sp_pols and the data_sp endTimes
-                                          t2 <- max(format(last(sp_pols@endTime)),format(last(data_sp@endTime)+1))
-                                          trange <- paste0(format(t1),"::",t2)
+                                          ## If we are the last time interval then lump all data into this interval
+                                          t2 <- last(data_sp@endTime) + 1
                                       }
 
                                       ## Now we know which data to bin in space, those appearing between t1 and t2
@@ -1741,7 +1762,7 @@ process_isea3h <- function(isea3h,resl) {
 ## Takes a spatial object and finds UIDs for it
 .UIDs <- function(x) {
     n <- length(x)
-    sapply(rnorm(n),function(x) digest::digest(x,algo="crc32"))
+    sapply(rnorm(n),function(x) digest::digest(x,algo="md5"))
 }
 
 ## Computes the mean of a vector x if x is numeric or logical, otherwise just returns the first element

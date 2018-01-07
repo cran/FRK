@@ -2,6 +2,7 @@ test_that("SRE 1D works",{
 
     library(dplyr)
     library(sp)
+    library(Matrix)
     ### Generate process and data
     sim_process <- data.frame(x = seq(0.005,0.995,by=0.01)) %>%
         mutate(y=0,proc = sin(x*10) + 0.3*rnorm(length(x)))
@@ -39,12 +40,29 @@ test_that("SRE 1D works",{
     ### Fit with 5 EM iterations so as not to take too much time
     S <- SRE.fit(S,n_EM = 3,tol = 1e-5,print_lik=FALSE)
     expect_is(S,"SRE")
+    expect_is(info_fit(S),"list")
 
     ### Predict over BAUs using both modes
+    grid_BAUs <- SRE.predict(S, covariances = TRUE)
+    expect_is(grid_BAUs,"list")
+    expect_equal(grid_BAUs$newdata$var, diag(grid_BAUs$Cov))
+    grid_BAUs <- SRE.predict(S, obs_fs = FALSE, covariances = TRUE)
+    expect_is(grid_BAUs,"list")
+    expect_equal(grid_BAUs$newdata$var, diag(grid_BAUs$Cov))
+    expect_equal(dim(grid_BAUs$Cov),rep(length(S@BAUs),2))
+
+    ### Check covariances option
     grid_BAUs <- SRE.predict(S)
     expect_is(grid_BAUs,"SpatialPixelsDataFrame")
     grid_BAUs <- SRE.predict(S,obs_fs = FALSE)
     expect_is(grid_BAUs,"SpatialPixelsDataFrame")
+    print(coef(S))
+
+    ### Check alphahat
+    alphahat <- coef(S)
+    expect_is(alphahat, "numeric")
+    expect_equal(length(alphahat), 1L)
+    expect_equal(names(alphahat), "Intercept")
 
     ### summary/print/show works
     expect_true({summary(S);TRUE})
