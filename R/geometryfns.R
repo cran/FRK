@@ -300,7 +300,7 @@ setMethod("coordnames",signature(x="STIDF"),function(x) {
 #' @param data object of class \code{SpatialPointsDataFrame}, \code{SpatialPolygonsDataFrame},  \code{STIDF}, or \code{STFDF}. Provision of \code{data} implies that the domain is bounded, and is thus necessary when the manifold is a \code{real_line, plane}, or \code{STplane}, but is not necessary when the manifold is the surface of a \code{sphere}
 #' @param nonconvex_hull flag indicating whether to use \code{INLA} to generate a non-convex hull. Otherwise a convex hull is used
 #' @param convex convex parameter used for smoothing an extended boundary when working on a bounded domain (that is, when the object \code{data} is supplied); see details
-#' @param tunit temporal unit when requiring space-time BAUs. Can be either "secs", "mins", "hours" or "days"
+#' @param tunit temporal unit when requiring space-time BAUs. Can be "secs", "mins", "hours", etc.
 #' @param xlims limits of the horizontal axis (overrides automatic selection)
 #' @param ylims limits of the vertical axis (overrides automatic selection)
 #' @param ... currently unused
@@ -309,6 +309,7 @@ setMethod("coordnames",signature(x="STIDF"),function(x) {
 #' Two types of BAUs are supported by \code{FRK}: ``hex'' (hexagonal) and ``grid'' (rectangular). In order to have a ``grid'' set of BAUs, the user should specify a cellsize of length one, or of length equal to the dimensions of the manifold, that is, of length 1 for \code{real_line} and of length 2 for the surface of a \code{sphere} and \code{plane}. When a ``hex'' set of BAUs is desired, the first element of \code{cellsize} is used to determine the side length by dividing this value by approximately 2. The argument \code{type} is ignored with \code{real_line} and ``hex'' is not available for this manifold.
 #'
 #'   If the object \code{data} is provided, then automatic domain selection may be carried out by employing the \code{INLA} function \code{inla.nonconvex.hull}, which finds a (non-convex) hull surrounding the data points (or centroids of the data polygons). This domain is extended and smoothed using the parameter \code{convex}. The parameter \code{convex} should be negative, and a larger absolute value for \code{convex} results in a larger domain with smoother boundaries (note that \code{INLA} was not available on CRAN at the time of writing).
+#' @seealso \code{\link{auto_basis}} for automatically constructing basis functions.
 #' @examples
 #' ## First a 1D example
 #' library(sp)
@@ -323,23 +324,22 @@ setMethod("coordnames",signature(x="STIDF"),function(x) {
 #' ## Now a 2D example
 #' data(meuse)
 #' coordinates(meuse) = ~x+y # change into an sp object
-#'  if(require(INLA)) {
-#'     ## Grid BAUs
-#'     GridPols_df <- auto_BAUs(manifold = plane(),
-#'                              cellsize = 200,
-#'                              type = "grid",
-#'                              data = meuse,
-#'                              convex=-0.05)
-#'     \dontrun{plot(GridPols_df)}
 #'
-#'     ## Hex BAUs
-#'     HexPols_df <- auto_BAUs(manifold = plane(),
-#'                             cellsize = 200,
-#'                             type = "hex",
-#'                             data = meuse,
-#'                             convex=-0.05)
-#'     \dontrun{plot(HexPols_df)}
-#' }
+#' ## Grid BAUs
+#' GridPols_df <- auto_BAUs(manifold = plane(),
+#'                          cellsize = 200,
+#'                          type = "grid",
+#'                          data = meuse,
+#'                          nonconvex_hull = 0)
+#' \dontrun{plot(GridPols_df)}
+#'
+#' ## Hex BAUs
+#' HexPols_df <- auto_BAUs(manifold = plane(),
+#'                         cellsize = 200,
+#'                         type = "hex",
+#'                         data = meuse,
+#'                         nonconvex_hull = 0)
+#' \dontrun{plot(HexPols_df)}
 #' @export
 auto_BAUs <- function(manifold, type=NULL,cellsize = NULL,
                       isea3h_res=NULL,data=NULL,nonconvex_hull=TRUE,
@@ -938,7 +938,8 @@ df_to_SpatialPolygons <- function(df,keys,coords,proj) {
     ## dfun takes a data frame with coordinates for 1 polygon, and makes one POLYGON object from it
     ## with a UID from the polygon key
     dfun <- function(d) {
-        Polygons(list(Polygon(d[coords])),digest::digest(d[keys]))
+        Polygons(list(Polygon(d[coords])),
+                 as.character(d[keys]))
     }
 
     ## Now apply dfun to all polygons in data frame
@@ -1108,7 +1109,21 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPoints"),
 
                   ## The following over returns a data frame equal in number of rows to data_sp
                   ## with the BAU info at the data location
-                  data_over_sp <- .parallel_over(data_sp,sp_pols)
+
+                  # ## If BAUs are SpatialPoints then do it manually
+                  # if(is(sp_pols, "SpatialPoints")) {
+                  #     crds <- coordnames(data_sp)
+                  #     df1 <- as.data.frame(data_sp)
+                  #     df2 <- sp_pols@data
+                  #     data_over_sp <- left_join(df1, df2,
+                  #                      by = crds)
+                  # } else {
+                  # data_over_sp <- .parallel_over(data_sp, sp_pols)
+                  # ## We now cbind the original data with data_over_sp
+                  # data_over_sp <- cbind(data_df,data_over_sp)
+                  # }
+
+                  data_over_sp <- .parallel_over(data_sp, sp_pols)
 
                   ## We now cbind the original data with data_over_sp
                   data_over_sp <- cbind(data_df,data_over_sp)
@@ -1435,6 +1450,8 @@ setMethod("BuildC",signature(data="STFDF"),
 ## Does the over function in parallel
 .parallel_over <- function(sp1,sp2,fn=NULL,batch_size = NULL) {
 
+
+
     if(!(opts_FRK$get("parallel") > 1)) {    # Either do serially
         over(sp1,sp2,fn=fn)
     } else {                                 # Or in parallel
@@ -1716,7 +1733,7 @@ process_isea3h <- function(isea3h,resl) {
 .polygons_to_points <- function(polys) {
 
     ## Basic check
-    if(!(is(polys,"STFDF") |  is(polys,"SpatialPixels")| is(polys,"SpatialPolygons")))
+    if(!(is(polys,"STFDF") |  is(polys,"SpatialPixels")| is(polys,"SpatialPoints") | is(polys,"SpatialPolygons")))
         stop("polys needs to be of class STFDF, SpatialPixels, or SpatialPolygons")
 
     ## If object is STFDF

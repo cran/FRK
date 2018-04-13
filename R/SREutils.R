@@ -13,6 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+#' @name SRE
 #' @title Construct SRE object, fit and predict
 #' @description The Spatial Random Effects (SRE) model is the central object in FRK. The function \code{FRK} provides a wrapper for the construction and estimation of the SRE object from data, using the functions \code{SRE} (the object constructor) and \code{SRE.fit} (for fitting it to the data). Please see \code{\link{SRE-class}} for more details on the SRE object's properties and methods.
 #' @param f \code{R} formula relating the dependent variable (or transformations thereof) to covariates
@@ -24,6 +25,7 @@
 #' @param fs_model if "ind" then the fine-scale variation is independent at the BAU level. If "ICAR", then an ICAR model for the fine-scale variation is placed on the BAUs
 #' @param vgm_model an object of class \code{variogramModel} from the package \code{gstat} constructed using the function \code{vgm}. This object contains the variogram model that will be fit to the data. The nugget is taken as the measurement error when \code{est_error = TRUE}. If unspecified, the variogram used is \code{gstat::vgm(1, "Lin", d, 1)}, where \code{d} is approximately one third of the maximum distance between any two data points
 #' @param K_type the parameterisation used for the \code{K} matrix. Currently this can be "unstructured" or "block-exponential" (default)
+#' @param normalise_basis flag indicating whether to normalise the basis functions so that they reproduce a stochastic process with approximately constant variance spatially
 #' @param SRE_model object returned from the constructor \code{SRE()} containing all the parameters and information on the SRE model
 #' @param n_EM maximum number of iterations for the EM algorithm
 #' @param tol convergence tolerance for the EM algorithm
@@ -31,8 +33,9 @@
 #' @param lambda ridge-regression regularisation parameter for when \code{K} is unstructured (0 by default). Can be a single number, or a vector (one parameter for each resolution)
 #' @param print_lik flag indicating whether likelihood value should be printed or not after convergence of the EM estimation algorithm
 # #' @param use_centroid flag indicating whether the basis functions are averaged over the BAU, or whether the basis functions are evaluated at the BAUs centroid in order to construct the matrix \eqn{S}. The flag can safely be set when the basis functions are approximately constant over the BAUs in order to reduce computational time
-#' @param obs_fs flag indicating whether the fine-scale variation sits in the observation model (systematic error, Case 1) or in the process model (fine-scale process variation, Case 2, default)
+#' @param object object of class \code{SRE}
 #' @param newdata object of class \code{SpatialPoylgons} indicating the regions over which prediction will be carried out. The BAUs are used if this option is not specified
+#' @param obs_fs flag indicating whether the fine-scale variation sits in the observation model (systematic error, Case 1) or in the process model (fine-scale process variation, Case 2, default)
 #' @param pred_polys deprecated. Please use \code{newdata} instead
 #' @param pred_time vector of time indices at which prediction will be carried out. All time points are used if this option is not specified
 #' @param covariances logical variable indicating whether prediction covariances should be returned or not. If set to \code{TRUE}, a maximum of 4000 prediction locations or polygons are allowed.
@@ -47,9 +50,11 @@
 #'
 #'The function \code{FRK} acts as a wrapper for the functions \code{SRE} and \code{SRE.fit}. An added advantage of using \code{FRK} directly is that it automatically generates BAUs and basis functions based on the data. Hence \code{FRK} can be called using only a list of data objects and an \code{R} formula, although the \code{R} formula can only contain space or time as covariates when BAUs are not explicitly supplied with the covariate data.
 #'
-#'Once the parameters are fitted, the \code{SRE} object is passed onto the function \code{SRE.predict()} in order to carry out optimal predictions over the same BAUs used to construct the SRE model with \code{SRE()}. The first part of the prediction process is to construct the matrix \eqn{S} over the prediction polygons. This is made computationally efficient by treating the prediction over polygons as that of the prediction over a combination of BAUs. This will yield valid results only if the BAUs are relatively small. Once the matrix \eqn{S} is found, a standard Gaussian inversion (through conditioning) using the estimated parameters is used for prediction.
+#'Once the parameters are fitted, the \code{SRE} object is passed onto the function \code{predict()} in order to carry out optimal predictions over the same BAUs used to construct the SRE model with \code{SRE()}. The first part of the prediction process is to construct the matrix \eqn{S} over the prediction polygons. This is made computationally efficient by treating the prediction over polygons as that of the prediction over a combination of BAUs. This will yield valid results only if the BAUs are relatively small. Once the matrix \eqn{S} is found, a standard Gaussian inversion (through conditioning) using the estimated parameters is used for prediction.
 #'
-#'\code{SRE.predict} returns the BAUs, which are of class \code{SpatialPolygonsDataFrame}, \code{SpatialPixelsDataFrame}, or \code{STFDF}, with two added attributes, \code{mu} and \code{var}. These can then be easily plotted using \code{spplot} or \code{ggplot2} (possibly in conjunction with \code{\link{SpatialPolygonsDataFrame_to_df}}) as shown in the package vignettes.
+#'\code{predict} returns the BAUs, which are of class \code{SpatialPolygonsDataFrame}, \code{SpatialPixelsDataFrame}, or \code{STFDF}, with two added attributes, \code{mu} and \code{var}. These can then be easily plotted using \code{spplot} or \code{ggplot2} (possibly in conjunction with \code{\link{SpatialPolygonsDataFrame_to_df}}) as shown in the package vignettes.
+#' @seealso \code{\link{SRE-class}} for details on the SRE object internals, \code{\link{auto_basis}} for automatically constructing basis functions, and \code{\link{auto_BAUs}} for automatically constructing BAUs. See also the paper \url{https://arxiv.org/abs/1705.08105} for details on code operation.
+#' @keywords spatial
 #' @export
 #' @examples
 #' library(sp)
@@ -87,7 +92,7 @@
 #'
 #'
 #' ### Predict over BAUs
-#' grid_BAUs <- SRE.predict(S)
+#' grid_BAUs <- predict(S)
 #'
 #' ### Plot
 #' \dontrun{
@@ -100,8 +105,8 @@
 #'     geom_point(data = data.frame(sim_data),aes(x=x,y=z),size=3) +
 #'     geom_line(data=sim_process,aes(x=x,y=proc),col="red")
 #'  print(g1)}
-SRE <- function(f,data,basis,BAUs,est_error=TRUE,average_in_BAU = TRUE,
-                fs_model = "ind",vgm_model = NULL, K_type = "block-exponential") {
+SRE <- function(f,data,basis,BAUs,est_error = TRUE,average_in_BAU = TRUE,
+                fs_model = "ind",vgm_model = NULL, K_type = "block-exponential", normalise_basis = TRUE) {
 
     ## Check that the arguments are OK
     .check_args1(f=f,data=data,basis=basis,BAUs=BAUs,est_error=est_error)
@@ -117,11 +122,13 @@ SRE <- function(f,data,basis,BAUs,est_error=TRUE,average_in_BAU = TRUE,
 
     ## Normalise basis functions for the prior process to have constant variance. This was seen to pay dividends in
     ## LatticeKrig, however we only do it once initially
-    cat("Normalising basis function evaluations at BAU level ...\n")
     S0 <- eval_basis(basis,.polygons_to_points(BAUs))     # evaluate basis functions over BAU centroids
-    xx <- sqrt(rowSums((S0) * S0))                        # Find the standard deviation (assuming unit basis function weight)
-    xx <- xx + 1*(xx == 0)                                # In the rare case all basis functions evaluate to zero don't do anything
-    S0 <- S0 / (as.numeric(xx))                           # Normalise the S matrix
+    if(normalise_basis) {
+        cat("Normalising basis function evaluations at BAU level ...\n")
+        xx <- sqrt(rowSums((S0) * S0))                        # Find the standard deviation (assuming unit basis function weight)
+        xx <- xx + 1*(xx == 0)                                # In the rare case all basis functions evaluate to zero don't do anything
+        S0 <- S0 / (as.numeric(xx))                           # Normalise the S matrix
+    }
 
     ## Find the distance matrix associated with the basis-function centroids
     D_basis <- BuildD(basis)
@@ -209,10 +216,10 @@ SRE <- function(f,data,basis,BAUs,est_error=TRUE,average_in_BAU = TRUE,
     } else stop("No other fs-model implemented yet")
 
     ## Now concatenate the matrices obtained from all the observations together
-    S <- do.call("rBind",S)
-    X <- do.call("rBind",X)
-    Cmat <- do.call("rBind",Cmat)
-    Z <- do.call("rBind",Z)
+    S <- do.call("rbind",S)
+    X <- do.call("rbind",X)
+    Cmat <- do.call("rbind",Cmat)
+    Z <- do.call("rbind",Z)
     Ve <- do.call("bdiag",Ve)
     Vfs <- do.call("bdiag",Vfs)
 
@@ -274,12 +281,23 @@ SRE.fit <- function(SRE_model,n_EM = 100L, tol = 0.01, method="EM", lambda = 0, 
 
 }
 
+#' @rdname SRE
+#' @export
+SRE.predict <- function(SRE_model, obs_fs = FALSE, newdata = NULL, pred_polys = NULL,
+                        pred_time = NULL, covariances = FALSE) {
+    warning("SRE.predict is deprecated. Please use predict.")
+    predict(SRE_model, obs_fs = obs_fs, newdata = newdata,
+            pred_polys = pred_polys, pred_time = pred_time,
+            covariances = covariances)
+
+}
 
 #' @rdname SRE
 #' @export
-SRE.predict <- function(SRE_model, obs_fs=FALSE, newdata = NULL, pred_polys = NULL,
-                        pred_time = NULL, covariances = FALSE) {
+setMethod("predict", signature="SRE", function(object, newdata = NULL, obs_fs = FALSE, pred_polys = NULL,
+                                              pred_time = NULL, covariances = FALSE) {
 
+    SRE_model <- object
     ## Deprecation coercion
     if(!is.null(pred_polys))
         newdata <- pred_polys
@@ -299,7 +317,7 @@ SRE.predict <- function(SRE_model, obs_fs=FALSE, newdata = NULL, pred_polys = NU
 
     ## Return predictions
     pred_locs
-}
+})
 
 #' @rdname SRE
 #' @export
@@ -353,8 +371,8 @@ summary.SRE <- function(object,...) {
 setMethod("summary",signature(object="SRE"),summary.SRE)
 
 ## Set method for retrieving info_fit
-#' @rdname SRE
-#' @export
+#' @rdname info_fit
+#' @aliases info_fit,SRE-method
 setMethod("info_fit", signature(SRE_model = "SRE"),
           function(SRE_model) {SRE_model@info_fit})
 
@@ -1127,7 +1145,7 @@ print.summary.SRE <- function(x, ...) {
 
             ## The below equations implement Section 2.3
             LAMBDAinv <- bdiag(Sm@Khat_inv,Q)                # block diagonal precision matrix
-            PI <- cBind(S0, .symDiagonal(n=length(BAUs)))    # PI = [S I]
+            PI <- cbind(S0, .symDiagonal(n=length(BAUs)))    # PI = [S I]
             tC_Ve_C <- t(CZ) %*% solve(Sm@Ve) %*% CZ +       # summary matrix
                 0*.symDiagonal(ncol(CZ))              # Ensure zeros on diagonal
             Qx <- t(PI) %*% tC_Ve_C %*% PI + LAMBDAinv       # conditional precision matrix
@@ -1440,14 +1458,19 @@ print.summary.SRE <- function(x, ...) {
 ## Checks arguments for the SRE() function. Code is self-explanatory
 .check_args1 <- function(f,data,basis,BAUs,est_error) {
     if(!is(f,"formula")) stop("f needs to be a formula.")
-    if(!(is(BAUs,"SpatialPolygonsDataFrame") | is(BAUs,"SpatialPixelsDataFrame") | is(BAUs,"STFDF")))
-        stop("BAUs should be a SpatialPolygonsDataFrame, SpatialPixelsDataFrame, or a STFDF object")
-    if(is(BAUs,"STFDF")) if(!(is(BAUs@sp,"SpatialPolygonsDataFrame") | is(BAUs@sp,"SpatialPixelsDataFrame")))
-        stop("The spatial component of the BAUs should be a SpatialPolygonsDataFrame or SpatialPixelsDataFrame")
     if(!is(data,"list"))
         stop("Please supply a list of Spatial objects.")
     if(!all(sapply(data,function(x) is(x,"Spatial") | is(x,"ST"))))
         stop("All data list elements need to be of class Spatial or ST")
+    if(!(is(BAUs,"SpatialPointsDataFrame") | is(BAUs,"SpatialPolygonsDataFrame") | is(BAUs,"SpatialPixelsDataFrame") | is(BAUs,"STFDF")))
+        stop("BAUs should be a SpatialPolygonsDataFrame, SpatialPixelsDataFrame, or a STFDF object")
+    if(is(BAUs,"STFDF")) if(!(is(BAUs@sp,"SpatialPointsDataFrame") | is(BAUs@sp,"SpatialPolygonsDataFrame") | is(BAUs@sp,"SpatialPixelsDataFrame")))
+        stop("The spatial component of the BAUs should be a SpatialPolygonsDataFrame or SpatialPixelsDataFrame")
+
+    # if(is(BAUs,"SpatialPointsDataFrame"))
+    #     stop("Implementation with Point BAUs is currently in progress")
+    # if(is(BAUs,"STFDF")) if(is(BAUs@sp,"SpatialPointsDataFrame"))
+    #     stop("Implementation with Point BAUs is currently in progress")
 
 
     if(!all(all.vars(f)[-1] %in% c(names(BAUs@data),coordnames(BAUs))))
@@ -1487,7 +1510,7 @@ print.summary.SRE <- function(x, ...) {
     if(!(all(lambda >= 0))) stop("lambda needs to be greater or equal to zero")
 }
 
-## Checks arguments for the SRE.predict() function. Code is self-explanatory
+## Checks arguments for the predict() function. Code is self-explanatory
 .check_args3 <- function(obs_fs=FALSE, newdata = NULL, pred_polys = NULL,
                          pred_time = NULL, covariances = FALSE, ...) {
     if(!(obs_fs %in% 0:1)) stop("obs_fs needs to be logical")
@@ -1661,10 +1684,9 @@ print.summary.SRE <- function(x, ...) {
     if(!obs_fs) {
         if(sigma2fs > 0) {   # fine-scale variance not zero
 
-            browser()
             ## The below equations implement Section 2.3
             LAMBDAinv <- bdiag(Sm@Khat_inv,Q)                # block diagonal precision matrix
-            PI <- cBind(S0, .symDiagonal(n=length(BAUs)))    # PI = [S I]
+            PI <- cbind(S0, .symDiagonal(n=length(BAUs)))    # PI = [S I]
             tC_Ve_C <- t(CZ) %*% solve(Sm@Ve) %*% CZ +       # summary matrix
                 0*.symDiagonal(ncol(CZ))              # Ensure zeros on diagonal
             Qx <- t(PI) %*% tC_Ve_C %*% PI + LAMBDAinv       # conditional precision matrix

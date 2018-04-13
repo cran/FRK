@@ -58,11 +58,11 @@ The spatial random effects (SRE) model is the model employed in Fixed Rank Krigi
 \item{\code{sigma2fshat}}{fine-scale variation scaling (estimated)}
 
 \item{\code{fs_model}}{type of fine-scale variation (independent or CAR-based). Currently only "ind" is permitted}
+
+\item{\code{info_fit}}{information on fitting (convergence etc.)}
 }}
 
-\keyword{Spatial}
-\keyword{effects,}
-\keyword{fixed}
-\keyword{kriging}
-\keyword{random}
-\keyword{rank}
+\seealso{
+\code{\link{SRE}} for details on how to construct and fit SRE models.
+}
+\keyword{spatial}

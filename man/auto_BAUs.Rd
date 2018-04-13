@@ -23,7 +23,7 @@ auto_BAUs(manifold, type = NULL, cellsize = NULL, isea3h_res = NULL,
 
 \item{convex}{convex parameter used for smoothing an extended boundary when working on a bounded domain (that is, when the object \code{data} is supplied); see details}
 
-\item{tunit}{temporal unit when requiring space-time BAUs. Can be either "secs", "mins", "hours" or "days"}
+\item{tunit}{temporal unit when requiring space-time BAUs. Can be "secs", "mins", "hours", etc.}
 
 \item{xlims}{limits of the horizontal axis (overrides automatic selection)}
 
@@ -55,21 +55,23 @@ Grid1D_df <- auto_BAUs(manifold = real_line(),
 ## Now a 2D example
 data(meuse)
 coordinates(meuse) = ~x+y # change into an sp object
- if(require(INLA)) {
-    ## Grid BAUs
-    GridPols_df <- auto_BAUs(manifold = plane(),
-                             cellsize = 200,
-                             type = "grid",
-                             data = meuse,
-                             convex=-0.05)
-    \dontrun{plot(GridPols_df)}
 
-    ## Hex BAUs
-    HexPols_df <- auto_BAUs(manifold = plane(),
-                            cellsize = 200,
-                            type = "hex",
-                            data = meuse,
-                            convex=-0.05)
-    \dontrun{plot(HexPols_df)}
+## Grid BAUs
+GridPols_df <- auto_BAUs(manifold = plane(),
+                         cellsize = 200,
+                         type = "grid",
+                         data = meuse,
+                         nonconvex_hull = 0)
+\dontrun{plot(GridPols_df)}
+
+## Hex BAUs
+HexPols_df <- auto_BAUs(manifold = plane(),
+                        cellsize = 200,
+                        type = "hex",
+                        data = meuse,
+                        nonconvex_hull = 0)
+\dontrun{plot(HexPols_df)}
 }
+\seealso{
+\code{\link{auto_basis}} for automatically constructing basis functions.
 }

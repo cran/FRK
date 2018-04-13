@@ -10,6 +10,8 @@ test_that("basic_wrapper",{
              cellsize = c(0.02,0.02),
              n_EM = 2,
              nonconvex_hull = FALSE)
-    Pred <- SRE.predict(SRE_model = S,
-                        obs_fs = TRUE)
+    Pred <- predict(S, obs_fs = TRUE)
+    expect_is(S, "SRE")
+    expect_is(Pred, "SpatialPixelsDataFrame")
+    expect_true(all(c("var","mu","sd") %in% names(Pred)))
 })

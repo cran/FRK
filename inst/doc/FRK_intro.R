@@ -71,8 +71,7 @@ S <- SRE.fit(SRE_model = S,    # SRE model
              print_lik=TRUE)   # print log-likelihood at each iteration
 
 ## ------------------------------------------------------------------------
-GridBAUs1 <- SRE.predict(SRE_model = S,          # SRE model
-                        obs_fs = FALSE)
+GridBAUs1 <- predict(S, obs_fs = FALSE)
 
 ## ------------------------------------------------------------------------
 BAUs_df <- as(GridBAUs1,"data.frame")
@@ -116,8 +115,7 @@ Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
                           nonconvex_hull=FALSE)    # convex hull
 
 ## ------------------------------------------------------------------------
-Pred_regions <- SRE.predict(SRE_model = S,                # SRE model
-                            newdata = Pred_regions)    # prediction polygons
+Pred_regions <- predict(S, newdata = Pred_regions)    # prediction polygons
 
 ## ----echo=FALSE,fig.cap="Prediction and prediction standard error obtained with FRK from the \\tt{meuse} dataset over arbitrary polygons. Both quantities are logs of ppm.\\label{fig:PredictionPolygon}",fig.subcap=c("",""),fig.width=6,fig.height=7.5,out.width="0.5\\linewidth",fig.pos="t"----
 Pred_regions_df <- SpatialPolygonsDataFrame_to_df(
@@ -215,7 +213,7 @@ S <- SRE.fit(SRE_model = S,    # SRE model
              print_lik=FALSE)  # do not print log-likelihood at each iteration
 
 ## ----eval=TRUE-----------------------------------------------------------
-isea3h_sp_poldf <- SRE.predict(SRE_model = S)          # fs variation is in the observation model
+isea3h_sp_poldf <- predict(S)          # fs variation is in the observation model
 
 ## ----echo=FALSE,results='hide',message=FALSE-----------------------------
 X <- SpatialPolygonsDataFrame_to_df(sp_polys = isea3h_sp_poldf,
@@ -338,8 +336,7 @@ G <- TensorP(G_spatial,G_temporal)         # take the tensor product
              tol = 0.1,         # tolerance on log-likelihood
              print_lik=FALSE)   # print log-likelihood trace
 
- grid_BAUs <- SRE.predict(SRE_model = S,         # SRE model
-                          obs_fs = FALSE)
+ grid_BAUs <- predict(S, obs_fs = FALSE)
 
 ## ----message=FALSE,results='hide'----------------------------------------
  analyse_days <- c(1,4,8,12,16,20)  # analyse only a few days
@@ -473,9 +470,8 @@ S <- SRE.fit(SRE_model = S,       # SRE model
              n_EM = 2,          # max. EM iterations
              tol = 0.01)          # convergence criteria
 
-grid_BAUs <- SRE.predict(SRE_model = S,         # SRE model
-                         obs_fs = TRUE,         # fs variation is in obs. model
-                         pred_time = c(4L,8L,12L)) # predict only at select days
+grid_BAUs <- predict(S, obs_fs = TRUE,         # fs variation is in obs. model
+                     pred_time = c(4L,8L,12L)) # predict only at select days
 
 ## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
 X <- lapply(1:length(time(grid_BAUs)),
@@ -585,8 +581,7 @@ S <- SRE.fit(SRE_model = S,    # SRE model
              n_EM = 4,       # max. no. of EM iterations
              tol = 0.01,       # tolerance at which EM is assumed to have converged
              print_lik=FALSE)   # print log-likelihood at each iteration
-GridBAUs2 <- SRE.predict(SRE_model = S,          # SRE model
-                        obs_fs = FALSE)
+GridBAUs2 <- predict(S, obs_fs = FALSE)
 BAUs_df <- as(GridBAUs2,"data.frame")
 Obs_df <- SpatialPolygonsDataFrame_to_df(sp_polys = meuse_pols,   # BAUs to convert
                                           vars = c("zinc"))  # fields to extract
@@ -702,8 +697,7 @@ ggplot() +
               n_EM = 4,
               tol = 0.01)
 
-  grid_BAUs <- SRE.predict(SRE_model = S,
-                          obs_fs = TRUE)
+  grid_BAUs <- predict(S, obs_fs = TRUE)
 
    X <- as(grid_BAUs,"data.frame") %>%
      filter(x < 1.1 & x > -0.1 & y > -0.5 & y < 10.5)

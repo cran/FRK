@@ -4,7 +4,7 @@ Denote the spatial process of interest as $\{Y(\svec) : \svec \in D\}$, where $D
 \begin{equation*}
 Y(\svec) = \tvec(\svec)^\top\alphab + \upsilon(\svec) + \xi(\svec); \quad \svec \in D,
 \end{equation*}
-where, for $\svec \in D$, $\tvec(\svec)$ is a vector of spatially referenced covariates, $\alphab$ is a vector of regression coefficients, $\upsilon(\svec)$ is a small-scale, spatially correlated random effect, and $\xi(\svec)$ is a fine-scale, spatially uncorrelated, random effect. It is natural to let $\E(\upsilon(\cdot)) = \E(\xi(\cdot)) = 0$. Define $\lambda(\cdot) \equiv \upsilon(\cdot) + \xi(\cdot)$. It is the structure of the process $\upsilon(\cdot)$ in terms of a linear combination of a fixed number of spatial basis functions that defines the SRE model for $\lambda(\cdot)$:
+where, for $\svec \in D$, $\tvec(\svec)$ is a vector of spatially referenced covariates, $\alphab$ is a vector of regression coefficients, $\upsilon(\svec)$ is a small-scale, spatially correlated random effect, and $\xi(\svec)$ is a fine-scale random effect that is almost spatially uncorrelated. It is natural to let $\E(\upsilon(\cdot)) = \E(\xi(\cdot)) = 0$. Define $\lambda(\cdot) \equiv \upsilon(\cdot) + \xi(\cdot)$. It is the structure of the process $\upsilon(\cdot)$ in terms of a linear combination of a fixed number of spatial basis functions that defines the SRE model for $\lambda(\cdot)$:
 $$
 \lambda(\svec) = \sum_{l=1}^r \phi_l(\svec)\eta_l + \xi(\svec);\quad \svec \in D,
 $$
@@ -28,9 +28,9 @@ $$
 \upsilon_i = \left(\frac{1}{|A_i|}\int_{A_i}\phib(\svec)\intd \svec\right)^\top \etab; \quad i = 1,\dots,N,
 $$
 \noindent so that $\upsilonb = \Smat\etab$, where $\Smat$ is the $N \times r$ matrix
-\begin{equation*}%\label{eq:S}
+\begin{equation}\label{eq:S_integral}
 \Smat \equiv \left(\frac{1}{|A_i|}\int_{A_i}\phib(\svec)\intd\svec : i = 1,\dots,N\right)^\top.
-\end{equation*}
+\end{equation}
 
 In \pkg{FRK}, we assume that $\etab$ is an $r$-dimensional Gaussian vector with mean zero and $r \times r$ covariance matrix $\Kmat$, and estimation of $\Kmat$ is based on likelihood methods; we denote this variant of FRK as FRK-V (where `V' stands for `vanilla'). If some structure is imposed on $\var(\etab)$ in terms of parameters $\varthetab$, then $\Kmat = \Kmat_\circ(\varthetab)$ and $\varthetab$ needs to be estimated; we denote this variant as FRK-M (where `M' stands for `model'). Frequently, the resolution of the BAUs is sufficiently fine, and the basis functions are sufficiently smooth, so that $\Smat$ can be approximated:
 \begin{equation}\label{eq:Sapprox}
@@ -43,7 +43,7 @@ In \pkg{FRK}, we do not directly model $\xi(\svec)$, since we are only intereste
 \begin{equation*}
 \var(\xi_i) = \sigma^2_\xi \varv_{\xi,i},
 \end{equation*}
-where $\sigma^2_\xi$ is a parameter to be estimated, and $\{\varv_{\xi,1},\dots,\varv_{\xi,N}\}$ are known and represent  heteroscedasticity. We further assume that the variables representing the discretised fine-scale variation, $\{\xi_i: i = 1,\dots,N\}$, are uncorrelated. From \eqref{eq:Yi1}, we can write
+where $\sigma^2_\xi$ is a parameter to be estimated, and the weights $\{\varv_{\xi,1},\dots,\varv_{\xi,N}\}$ are known and represent heteroscedasticity. These weights are typically generated from domain knowledge; they may, for example, correspond to topographical features such as terrain roughness \citep{Zammit_2015}. We further assume that the variables representing the discretised fine-scale variation, $\{\xi_i: i = 1,\dots,N\}$, are uncorrelated. From \eqref{eq:Yi1}, we can write
 \begin{equation}\label{eq:SRE_Y}
 \Yvec = \Tmat\alphab + \Smat\etab + \xib,
 \end{equation}
@@ -100,30 +100,31 @@ In \pkg{FRK}, we allow the prediction set $D^P$ to be as flexible as $D^O$; spec
 
 In all its generality, parameter estimation with the model of Section \ref{sec:SREModel} is problematic due to confounding between $\deltab$ and $\xib$. In \pkg{FRK}, the user thus needs to choose where the fine-scale variation sits, either in the observation model \eqref{eq:meas_process} (in which case $\sigma^2_\xi$ is fixed to 0) or in the process model \eqref{eq:Yi1} (in which case $\sigma^2_\delta$ is fixed to 0). We describe below the estimation procedure for the latter case; due to symmetry, the estimation equations of the former case can be simply obtained by replacing the subscript $\xi$ with $\delta$. However, which case is chosen by the user has a considerable impact on the prediction equations (Section \ref{sec:prediction}). Recall that the measurement-error covariance matrix $\Sigmamat_\epsilon$ is assumed known from measurement characteristics, or estimated using variogram techniques prior to estimating the remaining parameters described below. We consider the latter case where $\sigma^2_\delta = 0$. For conciseness, in this section we use $\thetab$ to denote the parameters in both FRK-V and FRK-M, only distinguishing when necessary.
 
-We carry out parameter estimation using an expectation maximisation (EM) algorithm \citep[similar to][]{Katzfuss_2011,Nguyen_2014} with \eqref{eq:Z_collapsed} as our model. Define the \emph{complete-data} likelihood $L_c(\thetab) \equiv [\etab,\Zvec \mid \thetab]$ (with $\xib_Z$ integrated out), where $[~\cdot~]$ denotes the probability distribution of its argument. In the E-step, the function
+We carry out parameter estimation using an expectation maximisation (EM) algorithm \citep[similar to][]{Katzfuss_2011,Nguyen_2014} with \eqref{eq:Z_collapsed} as our model. Define the \emph{complete-data} likelihood $L_c(\thetab) \equiv [\etab,\Zvec \mid \thetab]$ (with $\xib_Z$ integrated out), where $[~\cdot~]$ denotes the probability distribution of its argument.  The EM algorithm proceeds by first computing the conditional expectation (conditional on the data) of the complete-data log-likelihood at the current parameter estimates (the E-step), and, second, maximising this function with respect to the parameters (the M-step). In mathematical notation, in the E-step the function
 \begin{equation*}
 Q(\thetab \mid \thetab^{(l)}) \equiv \expect(\ln L_c(\thetab) \mid \Zvec,\thetab^{(l)}),
 \end{equation*}
-is found for some current estimate $\thetab^{(l)}$. In the M-step, the updated parameter estimate
+is found for some current estimate $\thetab^{(l)}$. In the M-step, the updated parameter estimates
 \begin{equation*}
 \thetab^{(l+1)} = \argmax_\thetab Q(\thetab \mid \thetab^{(l)}),
 \end{equation*}
-is found. It is straightforward to show that, conditionally,
+are found.
+
+The E-step boils down to finding the conditional distribution of $\etab$ at the current parameter estimates. One can use standard results in Gaussian conditioning \citep[e.g., ][ Appendix A]{Rasmussen_2006}  to show from the joint distribution of $(\etab,\Zvec \mid \thetab^{(l)})^\top$ that
 \begin{equation*}
 \etab \mid \Zvec,\thetab^{(l)} \sim \Gau(\muvec_\eta^{(l)},\Sigmamat_\eta^{(l)}),
 \end{equation*}
 where
 \begin{align*}
-\muvec_\eta^{(l)} &= \Sigmamat_\eta^{(l)} \Smat_Z^\top(\Dmat_Z^{(l)})^{-1}(\Zvec - \Tmat_Z\alphab^{(l)}), \\
-\Sigmamat_\eta^{(l)} &= (\Smat_Z^\top(\Dmat_Z^{(l)})^{-1}\Smat_Z + (\Kmat^{(l)})^{-1})^{-1},
+\muvec_\eta^{(l)} &= \Sigmamat_\eta^{(l)} \Smat_Z^\top\left(\Dmat_Z^{(l)}\right)^{-1}\left(\Zvec - \Tmat_Z\alphab^{(l)}\right), \\
+\Sigmamat_\eta^{(l)} &= \left(\Smat_Z^\top\left(\Dmat_Z^{(l)}\right)^{-1}\Smat_Z + \left(\Kmat^{(l)}\right)^{-1}\right)^{-1},
 \end{align*}
 where $\Dmat_Z^{(l)} \equiv (\sigma^2_\xi)^{(l)} \Vmat_{\xi,Z} + \Sigmamat_\epsilon$ and where $\Kmat^{(l)}$ is defined below.
 
 The update for $\alphab$ is
 \begin{equation}
-\alphab^{(l+1)} = (\Tmat_Z^\top (\Dmat_Z^{(l+1)})^{-1} \Tmat_Z)^{-1}\Tmat_Z^\top(\Dmat_Z^{(l+1)})^{-1}(\Zvec - \Smat_Z \muvec_\eta^{(l)}). \label{eq:alpha}
+\alphab^{(l+1)} = \left(\Tmat_Z^\top \left(\Dmat_Z^{(l+1)}\right)^{-1} \Tmat_Z\right)^{-1}\Tmat_Z^\top\left(\Dmat_Z^{(l+1)}\right)^{-1}\left(\Zvec - \Smat_Z \muvec_\eta^{(l)}\right). \label{eq:alpha}
 \end{equation}
-
 In FRK-V, the update for $\Kmat^{(l+1)}$ is
 
 \begin{equation*}
@@ -132,7 +133,7 @@ In FRK-V, the update for $\Kmat^{(l+1)}$ is
 
 \noindent while in FRK-M, where recall that $\Kmat = \Kmat_\circ(\varthetab)$, the update is
 \begin{equation*}
-\varthetab^{(l+1)} = \argmax_{\varthetab} \ln| \Kmat_\circ(\varthetab)^{-1}| - \tr(\Kmat_\circ(\varthetab)^{-1}(\Sigmamat_\eta^{(l)} + \muvec_\eta^{(l)} \muvec_\eta^{(l)^\top})),
+\varthetab^{(l+1)} = \argmax_{\varthetab} \ln\left| \Kmat_\circ(\varthetab)^{-1}\right| - \tr\left(\Kmat_\circ(\varthetab)^{-1}\left(\Sigmamat_\eta^{(l)} + \muvec_\eta^{(l)} \muvec_\eta^{(l)^\top}\right)\right),
 \end{equation*}
 \noindent which is numerically optimised using the function \code{optim} with $\varthetab^{(l)}$ as the initial vector.
 
@@ -153,7 +154,7 @@ where recall that $m$ is the dimension of the data vector $\Zvec$ and $\alphab^{
 
 Convergence of the EM algorithm is assessed using the (\emph{incomplete-data}) log-likelihood function at each iteration,
 \begin{equation*}
-\ln [\Zvec \mid \alphab^{(l)}, \Kmat^{(l)}, (\sigma^2_\xi)^{(l)}] = -\frac{m}{2}\ln 2\pi -\frac{1}{2}\ln |\Sigmamat_Z^{(l)}| - \frac{1}{2}(\Zvec - \Tmat_Z\alphab^{(l)})^\top(\Sigmamat_Z^{(l)})^{-1}(\Zvec - \Tmat_Z\alphab^{(l)}),
+\ln \left[\Zvec \mid \alphab^{(l)}, \Kmat^{(l)}, (\sigma^2_\xi)^{(l)}\right] = -\frac{m}{2}\ln 2\pi -\frac{1}{2}\ln \left|\Sigmamat_Z^{(l)}\right| - \frac{1}{2}(\Zvec - \Tmat_Z\alphab^{(l)})^\top(\Sigmamat_Z^{(l)})^{-1}(\Zvec - \Tmat_Z\alphab^{(l)}),
 \end{equation*}
 where
 \begin{equation*}
@@ -161,8 +162,8 @@ where
 \end{equation*}
 and recall that $\Dmat_{\xi,Z}^{(l)} \equiv (\sigma_\xi^2)^{(l)}\Vmat_Z + \Sigmamat_\epsilon$. Efficient computation of the log-likelihood is facilitated through the use of the Sherman--Morrison--Woodbury matrix identity and a matrix-determinant lemma \citep[e.g.,][]{Henderson_1981}. Specifically, the operations
 \begin{align*}
-(\Sigmamat_Z^{(l)})^{-1} &= (\Dmat_Z^{(l)})^{-1} - (\Dmat_Z^{(l)})^{-1} \Smat_Z ((\Kmat^{(l)})^{-1} + \Smat^\top_Z (\Dmat_Z^{(l)})^{-1}\Smat_Z)^{-1}\Smat_Z^\top(\Dmat_Z^{(l)})^{-1},\\
-| \Sigmamat_Z^{(l)}  | &= | (\Kmat^{(l)})^{-1} + \Smat_Z^\top(\Dmat_Z^{(l)})^{-1} \Smat_Z | |\Kmat^{(l)} | |\Dmat_Z^{(l)} |,%\label{eq:determinant}
+\left(\Sigmamat_Z^{(l)}\right)^{-1} &= \left(\Dmat_Z^{(l)}\right)^{-1} - \left(\Dmat_Z^{(l)}\right)^{-1} \Smat_Z \left[\left(\Kmat^{(l)}\right)^{-1} + \Smat^\top_Z \left(\Dmat_Z^{(l)}\right)^{-1}\Smat_Z\right]^{-1}\Smat_Z^\top\left(\Dmat_Z^{(l)}\right)^{-1},\\
+\left| \Sigmamat_Z^{(l)}  \right| &= \left| \left(\Kmat^{(l)}\right)^{-1} + \Smat_Z^\top\left(\Dmat_Z^{(l)}\right)^{-1} \Smat_Z \right| \left|\Kmat^{(l)} \right| \left|\Dmat_Z^{(l)}\right|,%\label{eq:determinant}
 \end{align*}
 ensure that we only deal with vectors of length $m$ and matrices of size $r \times r$, where typically the fixed rank $r \ll m,$ the dataset size.
 
@@ -189,7 +190,7 @@ the rows of which sum to one, such that
 where $\Tmat_P \equiv \Cmat_P \Tmat$, $\Smat_P \equiv \Cmat_P \Smat$, $\xib_P \equiv \Cmat_P \xib$ and $\var(\xib_P) = \sigma^2_\xi\Cmat_P\Vmat_\xi\Cmat_P^\top \equiv \sigma^2_\xi\Vmat_{\xi,P}$.  As with the observations, these prediction regions may overlap. In practice, it may not always be possible for each $\tilde{B}_i$ to include entire BAUs. In this case, we assume that a prediction region contains a BAU if and only if the BAU centroid lies within the region.
 
 Let $l^*$ denote the EM iteration number at which convergence was reached. The final estimates are then,
-$$\widehat\muvec_\eta \equiv \muvec_\eta^{(l^*)}, \widehat\Sigmamat_\eta \equiv \Sigmamat_\eta^{(l^*)}, \widehat\alphab \equiv \alphab^{(l^*)}, \widehat\Kmat \equiv \Kmat^{(l^*)}, \widehat\sigma^2_\xi \equiv (\sigma^2_\xi)^{(l^*)}, \textrm{~~and~~} \widehat\sigma^2_\delta \equiv (\sigma^2_\delta)^{(l^*)}.$$
+$$\widehat\muvec_\eta \equiv \muvec_\eta^{(l^*)},~~ \widehat\Sigmamat_\eta \equiv \Sigmamat_\eta^{(l^*)},~~ \widehat\alphab \equiv \alphab^{(l^*)}, ~~\widehat\Kmat \equiv \Kmat^{(l^*)}, ~~\widehat\sigma^2_\xi \equiv (\sigma^2_\xi)^{(l^*)}, \textrm{~~and~~} \widehat\sigma^2_\delta \equiv (\sigma^2_\delta)^{(l^*)}.$$
 Recall from Section \ref{sec:estimation} that the user needs to attribute excess fine-scale variation to either the measurement process or the physical process. This leads to the following two cases.
 
 {\bf Case 1: $\sigma^2_\xi = 0$.} The prediction vector $\widehat\Yvec_P$ and covariance matrix $\Sigmamat_{Y_P\mid Z}$, corresponding to the first two moments from the predictive distribution $[\Yvec_P \mid \Zvec]$ when $\sigma^2_\xi = 0,$ are
@@ -209,7 +210,7 @@ Let $\Wvec \equiv (\etab^\top,\xib^\top)^\top$ and $\Pimat \equiv (\Smat,\Imat)$
 for
 \begin{align*}
 \widehat\Wvec &\equiv \Sigmamat_W\Pimat^\top\Cmat_Z^\top\Sigmamat_\epsilon^{-1}(\Zvec - \Tmat_Z\widehat\alphab),\\%\label{eq:What} \\
-\Sigmamat_W &\equiv (\Pimat^\top \Cmat_Z^\top \Sigmamat_\epsilon^{-1} \Cmat_Z \Pimat + \Lambdamat^{-1})^{-1},\\% \label{eq:Winv}
+\Sigmamat_W &\equiv \left(\Pimat^\top \Cmat_Z^\top \Sigmamat_\epsilon^{-1} \Cmat_Z \Pimat + \Lambdamat^{-1}\right)^{-1},\\% \label{eq:Winv}
 \end{align*}
 and the block-diagonal matrix $\Lambdamat \equiv \textrm{bdiag}(\widehat\Kmat,\widehat\sigma^{2}_\xi\Vmat_{\xi})$, where $\textrm{bdiag}(\cdot)$ returns a block diagonal matrix of its matrix arguments. Note that all calculations are made after substituting in the EM-estimated parameters.
 

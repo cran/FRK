@@ -320,7 +320,7 @@ GridBAUs1 <- auto_BAUs(manifold = plane(),    # 2D plane
                      nonconvex_hull=FALSE)    # convex hull
 @
 
-\noindent The \tt{auto\_BAUs} function takes several arguments (see \tt{help(auto\_BAUs)} for details). Above, we instruct the helper function to construct BAUs on the plane, centred around the data \tt{meuse} with each BAU of size 100 $\times$ 100 (with units in m since the data is supplied with x-y coordinates in m). The \tt{type="grid"} input instructs that we want a rectangular grid and not a hexagonal lattice (use \tt{"hex"} for a hexagonal lattice), and \tt{convex=-0.05} is a specific parameter controlling the buffer-width of the spatial-domain boundary. The name `convex' was chosen as it is also used to control the buffer in case a non-convex hull is desired by setting \tt{nonconvex\_hull=TRUE} (see \tt{INLA::inla.nonconvex.hull} for more details and note that {\bf INLA} needs to be installed for this option to be set). For the $i$th BAU, we also need to attribute the element $\varv_i$ that describes the hetereoscedascity of the fine-scale variation for that BAU. As described in Section \ref{sec:SREModel}, this component encompasses all process variation that occurs at the BAU scale and only needs to be known up to a constant of proportionality, $\sigma^2_\xi$ or $\sigma^2_\delta$ (depending on the chosen model); this constant is estimated using maximum likelihood with \tt{SRE.predict} using the EM algorithm of Section \ref{sec:estimation}. Typically, geographic features such as altitude are appropriate, but in this case we will just set this parameter to unity. It is important that this field is labelled `fs':
+\noindent The \tt{auto\_BAUs} function takes several arguments (see \tt{help(auto\_BAUs)} for details). Above, we instruct the helper function to construct BAUs on the plane, centred around the data \tt{meuse} with each BAU of size 100 $\times$ 100 (with units in m since the data is supplied with x-y coordinates in m). The \tt{type="grid"} input instructs that we want a rectangular grid and not a hexagonal lattice (use \tt{"hex"} for a hexagonal lattice), and \tt{convex=-0.05} is a specific parameter controlling the buffer-width of the spatial-domain boundary. The name `convex' was chosen as it is also used to control the buffer in case a non-convex hull is desired by setting \tt{nonconvex\_hull=TRUE} (see \tt{INLA::inla.nonconvex.hull} for more details and note that {\bf INLA} needs to be installed for this option to be set). For the $i$th BAU, we also need to attribute the element $\varv_i$ that describes the hetereoscedascity of the fine-scale variation for that BAU. As described in Section \ref{sec:SREModel}, this component encompasses all process variation that occurs at the BAU scale and only needs to be known up to a constant of proportionality, $\sigma^2_\xi$ or $\sigma^2_\delta$ (depending on the chosen model); this constant is estimated using maximum likelihood with \tt{SRE.fit} using the EM algorithm of Section \ref{sec:estimation}. Typically, geographic features such as altitude are appropriate, but in this case we will just set this parameter to unity. It is important that this field is labelled `fs':
 
 <<>>=
 GridBAUs1$fs <- 1   # fine-scale variation at BAU level
@@ -393,11 +393,10 @@ S <- SRE.fit(SRE_model = S,    # SRE model
 
 \vspace{0.1in}
 
-\noindent {\bf Step 6:} Finally, we predict at all the BAUs with the fitted model. This is done using the function \tt{SRE.predict}. The argument \tt{obs\_fs} dictates whether we attribute the fine-scale variation to the process model or the observation model (in which case it takes the role of systematicerror). Below, we allocate it to the process model.
+\noindent {\bf Step 6:} Finally, we predict at all the BAUs with the fitted model. This is done using the function \tt{predict}. The argument \tt{obs\_fs} dictates whether we attribute the fine-scale variation to the process model or the observation model (in which case it takes the role of systematicerror). Below, we allocate it to the process model.
 
 <<>>=
-GridBAUs1 <- SRE.predict(SRE_model = S,          # SRE model
-                        obs_fs = FALSE)
+GridBAUs1 <- predict(S, obs_fs = FALSE)
 @
 
 \noindent The object \tt{GridBAUs1} now contains the prediction vector and the square of the prediction standard error at the BAU level in the fields \tt{mu} and \tt{var}, respectively. These can be plotted using the standard plotting commands, such as those in \pkg{sp} or \pkg{ggplot2}. To use the latter, we first need to convert the \tt{Spatial} object to a data frame as follows:
@@ -456,8 +455,7 @@ Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
 \noindent and carry out prediction on the larger polygons:
 
 <<>>=
-Pred_regions <- SRE.predict(SRE_model = S,                # SRE model
-                            newdata = Pred_regions)    # prediction polygons
+Pred_regions <- predict(S, newdata = Pred_regions)    # prediction polygons
 @
 
 \noindent The prediction and its standard error can be visualised as before. These plots are shown in Fig.~\ref{fig:PredictionPolygon}.
@@ -609,7 +607,7 @@ S <- SRE.fit(SRE_model = S,    # SRE model
 \noindent {\bf Step 6:} We now predict at the BAU level but this time ensure that \tt{obs\_fs = TRUE}, which indicates that we are forcing $\sigma^2_\xi$ to be zero and that the observations have systematic error. Maps of the FRK prediction generated with this flag set are rather smooth (since the basis functions adopted tend to be smooth) and the prediction standard error tends to be higher compared to what one would obtain when setting \tt{obs\_fs = FALSE}.
 
 <<eval=TRUE>>=
-isea3h_sp_poldf <- SRE.predict(SRE_model = S)          # fs variation is in the observation model
+isea3h_sp_poldf <- predict(S)          # fs variation is in the observation model
 @
 
 The prediction and prediction standard error maps, together with the observation data, are shown in Figs.~\ref{fig:AIRSresults1}--\ref{fig:AIRSresults3}.
@@ -773,7 +771,7 @@ G <- TensorP(G_spatial,G_temporal)         # take the tensor product
 
 \vspace{0.1in}
 
-\noindent {\bf Steps 4--6:} We next construct the SRE model, using an intercept and latitude as fixed effects, \tt{STObj} as the data, \tt{G} as the set of basis functions, and \tt{grid\_BAUs} as the BAUs. We also specify \tt{est\_error = FALSE} since this functionality is currently not implemented for spatio-temporal data. The SRE model is then fitted using the familiar command \tt{SRE.fit} and prediction is carried out using \tt{SRE.predict}:
+\noindent {\bf Steps 4--6:} We next construct the SRE model, using an intercept and latitude as fixed effects, \tt{STObj} as the data, \tt{G} as the set of basis functions, and \tt{grid\_BAUs} as the BAUs. We also specify \tt{est\_error = FALSE} since this functionality is currently not implemented for spatio-temporal data. The SRE model is then fitted using the familiar command \tt{SRE.fit} and prediction is carried out using \tt{predict}:
 
 <<SRE,results='hide',cache=FALSE>>=
  f <- z ~ 1 + lat                 # fixed effects part
@@ -788,8 +786,7 @@ G <- TensorP(G_spatial,G_temporal)         # take the tensor product
              tol = 0.1,         # tolerance on log-likelihood
              print_lik=FALSE)   # print log-likelihood trace
 
- grid_BAUs <- SRE.predict(SRE_model = S,         # SRE model
-                          obs_fs = FALSE)
+ grid_BAUs <- predict(S, obs_fs = FALSE)
 @
 
 Plotting proceeds precisely the same way as in Section \ref{sec:meuse}, however now we need to convert the spatial polygons at multiple time points to data frames. This can be done by simply iterating through the time points we wish to visualise. In the following, we extract a data frame for the BAUs on days 1, 4, 8, 12, 16, and 20. The prediction and the prediction standard error are shown in Figs.~\ref{fig:FRK_pred1} and \ref{fig:FRK_pred2}, respectively. Note how the prediction has both smooth and fine-scale components. This is expected, since fine-scale variation was, this time, included in the prediction. Note also that the BAUs we used are not located everywhere within the square domain of interest. This is because the \tt{auto\_BAUs} function carefully chooses a (non-square) domain in an attempt to minimise the number of BAUs needed. This can be adjusted by changing the \tt{convex} parameter in \tt{auto\_BAUs}.
@@ -987,9 +984,8 @@ S <- SRE.fit(SRE_model = S,       # SRE model
              n_EM = 2,          # max. EM iterations
              tol = 0.01)          # convergence criteria
 
-grid_BAUs <- SRE.predict(SRE_model = S,         # SRE model
-                         obs_fs = TRUE,         # fs variation is in obs. model
-                         pred_time = c(4L,8L,12L)) # predict only at select days
+grid_BAUs <- predict(S, obs_fs = TRUE,         # fs variation is in obs. model
+                     pred_time = c(4L,8L,12L)) # predict only at select days
 @
 
 <<echo=FALSE,message=FALSE,results='hide'>>=
@@ -1123,8 +1119,7 @@ S <- SRE.fit(SRE_model = S,    # SRE model
              n_EM = 4,       # max. no. of EM iterations
              tol = 0.01,       # tolerance at which EM is assumed to have converged
              print_lik=FALSE)   # print log-likelihood at each iteration
-GridBAUs2 <- SRE.predict(SRE_model = S,          # SRE model
-                        obs_fs = FALSE)
+GridBAUs2 <- predict(S, obs_fs = FALSE)
 BAUs_df <- as(GridBAUs2,"data.frame")
 Obs_df <- SpatialPolygonsDataFrame_to_df(sp_polys = meuse_pols,   # BAUs to convert
                                           vars = c("zinc"))  # fields to extract
@@ -1260,8 +1255,7 @@ From here on, the analysis proceeds in exactly the same way as shown in all the 
                n_EM = 4,
                tol = 0.01)
 
-   grid_BAUs <- SRE.predict(SRE_model = S,
-                           obs_fs = TRUE)
+   grid_BAUs <- predict(S, obs_fs = TRUE)
 
     X <- as(grid_BAUs,"data.frame") %>%
       filter(x < 1.1 & x > -0.1 & y > -0.5 & y < 10.5)
@@ -1328,9 +1322,10 @@ In summary, the package \pkg{FRK} is designed to address the majority of needs f
 
 The development page of \pkg{FRK} is \code{https://github.com/andrewzm/FRK}. Users are encouraged to report any bugs or issues relating to the package on this page.
 
+
 \section*{Acknowledgements}
 
-Package development was facilitated with \pkg{devtools}; this paper was compiled using \pkg{knitr}, and package testing was carried out using \pkg{testthat} and \pkg{covr}. Some sparse-matrix operations are facilitated using \proglang{C} code from the software package \pkg{SuiteSparse} \citep{SuiteSparse}. We thank Jonathan Rougier for helpful comments on the manuscript, Chris Wikle for discussions on the importance of the fine-scale variation component of a spatial statistical model, and Clint Shumack and Enki Yoo for providing useful feedback on the package.
+Package development was facilitated with \pkg{devtools}; this paper was compiled using \pkg{knitr}, and package testing was carried out using \pkg{testthat} and \pkg{covr}. We thank Jonathan Rougier, Christopher Wikle, Clint Shumack, Enki Yoo and Behzad Kianian for providing valuable feedback on the package.
 
 
 % \section{Future work}
