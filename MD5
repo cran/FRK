@@ -1,4 +1,4 @@
-3a97b41bf51ac67d4b2f31eeb7ce1315 *DESCRIPTION
+442a89933275856cb4b7435c6de7c5c8 *DESCRIPTION
 329a5a3c63f4effb9d8a62d3c8760dd7 *NAMESPACE
 4d5de9dedf15b9ee2c5213296c7d6b88 *R/AllClass.R
 ccba44d35c290ed6f8814b376ddb5cfa *R/AllGeneric.R
@@ -24,7 +24,7 @@ e2cb89c44ec958d6984ed440cabc7300 *demo/00Index
 3aee4b10d695bca5a07368a4d23b5b82 *demo/FRK-meuse.R
 1ecf48e555bdf29ea9d52c3710cb1c8b *inst/doc/FRK_intro.R
 ecd352fc7b2fe8051b86627eefa36531 *inst/doc/FRK_intro.Rnw
-49ab7c0a5ea22ea803f5aa9d7e0e52c4 *inst/doc/FRK_intro.pdf
+4692e3aec1b1364fa9fd54a326465f55 *inst/doc/FRK_intro.pdf
 a3c4438c2346ed6c051ae6e83acca77f *man/AIRS_05_2003.Rd
 43a1a9cbd4b1a1456bb9734aae7d3084 *man/BAUs_from_points.Rd
 d73b268801e4a3fdefce571b9f43e45c *man/Basis-class.Rd
@@ -80,6 +80,6 @@ e811393536b6fd654f2f8f73adbfb997 *tests/testthat/test_other.R
 a13c4bf2c82bb858780d15214a1eafc3 *tests/testthat/test_sre_polygon_predict.R
 c48d8b8dc674e63da5b3fa34a49c995c *tests/testthat/test_support.R
 8b3d6c10f9a86e0c3b805ee9ecc4acb7 *tests/testthat/test_wrapper.R
-7f74eeb2bd48384a43212636157ac02c *vignettes/FRK_Sections_21_23.tex
+7c05357424d1bca02b29a67dcac3183d *vignettes/FRK_Sections_21_23.tex
 87b734fc3f45b8090b2847a7ad1b6962 *vignettes/FRK_bib.bib
 ecd352fc7b2fe8051b86627eefa36531 *vignettes/FRK_intro.Rnw
