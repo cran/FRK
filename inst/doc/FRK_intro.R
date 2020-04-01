@@ -1,28 +1,28 @@
-## ----setup, include=FALSE, cache=FALSE-----------------------------------
+## ----setup, include=FALSE, cache=FALSE----------------------------------------
 library(knitr)
 # set global chunk options
 # opts_chunk$set(fig.path='figure/minimal-', fig.align='center', fig.show='hold')
 # options(formatR.arrow=TRUE,width=90)
 knitr::opts_chunk$set(dpi=100)
 
-## ----eval=TRUE,message=FALSE---------------------------------------------
+## ----eval=TRUE,message=FALSE--------------------------------------------------
 library(sp)        # for defining points/polygons
 library(ggplot2)   # for plotting
 library(dplyr)     # for easy data manipulation
 library(FRK)       # for carrying out FRK
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 opts_FRK$set("progress",FALSE)  # no progress bars
 opts_FRK$set("parallel",0L)     # no parallelisation
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(meuse)            # load meuse data
 print(class(meuse))    # print class of meuse data
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 coordinates(meuse) = ~x+y     # change into an sp object
 
-## ----message=FALSE-------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 set.seed(1)
 GridBAUs1 <- auto_BAUs(manifold = plane(),    # 2D plane
                      cellsize = c(100,100),   # BAU cellsize
@@ -31,7 +31,7 @@ GridBAUs1 <- auto_BAUs(manifold = plane(),    # 2D plane
                      convex=-0.05,            # border buffer factor
                      nonconvex_hull=FALSE)    # convex hull
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 GridBAUs1$fs <- 1   # fine-scale variation at BAU level
 
 ## ----echo=FALSE,fig.cap="(a) Locations of the \\tt{meuse} data. (b) BAUs for Fixed Rank Kriging with the \\tt{meuse} dataset.\\label{fig:meuse}",fig.subcap=c("",""),fig.width=5,fig.height=4,out.width="0.5\\linewidth",fig.align='center'----
@@ -40,7 +40,7 @@ plot(meuse,add=T)
 plot(NULL,NULL,xlim = c(178605,181390),ylim=c(329714,333611),asp=1,xlab="Easting (m)",ylab="Northing (m)")
 plot(as(GridBAUs1,"SpatialPolygons"),add=T)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 G <- auto_basis(manifold = plane(),   # 2D plane
                 data=meuse,           # meuse data
                 nres = 2,             # number of resolutions
@@ -53,10 +53,10 @@ show_basis(G) +             # illustrate basis functions
     xlab("Easting (m)") +   # x-label
     ylab("Northing (m)")    # y-label
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 f <- log(zinc) ~ 1    # formula for SRE model
 
-## ----results='hide'------------------------------------------------------
+## ----results='hide'-----------------------------------------------------------
 S <- SRE(f = f,                  # formula
          data = list(meuse),     # list of datasets
          BAUs = GridBAUs1,       # BAUs
@@ -70,13 +70,13 @@ S <- SRE.fit(SRE_model = S,    # SRE model
              tol = 0.01,       # tolerance at which EM is assumed to have converged
              print_lik=TRUE)   # print log-likelihood at each iteration
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 GridBAUs1 <- predict(S, obs_fs = FALSE)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 BAUs_df <- as(GridBAUs1,"data.frame")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 g1 <- ggplot() +                          # Use a plain theme
     geom_tile(data=BAUs_df ,                  # Draw BAUs
                  aes(x,y,fill=mu),      # Colour <-> Mean
@@ -106,7 +106,7 @@ g2 <- ggplot() +                          # Similar to above but with s.e.
 plot(g1)
 plot(g2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
                           cellsize = c(600,600),   # choose a large grid size
                           type = "grid",           # use a grid (not hex)
@@ -114,7 +114,7 @@ Pred_regions <- auto_BAUs(manifold = plane(),      # model on the 2D plane
                           convex=-0.05,            # border buffer factor
                           nonconvex_hull=FALSE)    # convex hull
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 Pred_regions <- predict(S, newdata = Pred_regions)    # prediction polygons
 
 ## ----echo=FALSE,fig.cap="Prediction and prediction standard error obtained with FRK from the \\tt{meuse} dataset over arbitrary polygons. Both quantities are logs of ppm.\\label{fig:PredictionPolygon}",fig.subcap=c("",""),fig.width=6,fig.height=7.5,out.width="0.5\\linewidth",fig.pos="t"----
@@ -146,24 +146,24 @@ g2 <- ggplot() +
 plot(g1)
 plot(g2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(meuse)
 meuse[1:10,"zinc"] <- NA
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 meuse2 <- subset(meuse,!is.na(zinc))
 meuse2 <- meuse2[,c("x","y","zinc")]
 coordinates(meuse2) <- ~x+y
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 meuse$zinc <- NULL
 coordinates(meuse) <- c("x","y")
 meuse.grid2 <- BAUs_from_points(meuse)
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 data(AIRS_05_2003)                                          ## Load data
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 AIRS_05_2003 <-
     dplyr::filter(AIRS_05_2003,day %in% 1:3) %>%    # only first three days
     dplyr::mutate(std=co2std) %>%                   # change std to have suitable name
@@ -172,14 +172,14 @@ coordinates(AIRS_05_2003) = ~lon+lat                # change into an sp object
 proj4string(AIRS_05_2003) =
             CRS("+proj=longlat +ellps=sphere")      # unprojected coordinates on sphere
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 isea3h_sp_poldf <- auto_BAUs(manifold   = sphere(),  # model on sphere
                              isea3h_res = 6,         # isea3h resolution 6 BAUs
                              type = "hex",           # hexagonal grid
                              data = AIRS_05_2003)    # remove BAUs where there is not data
 isea3h_sp_poldf$fs = 1                               # fine-scale component
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 G <- auto_basis(manifold = sphere(), # basis functions on the sphere
                 data=AIRS_05_2003,   # AIRS data
                 nres = 3,            # number of resolutions
@@ -198,7 +198,7 @@ show_basis(G,draw_world()) +
           xlab("lon (deg)") +
           ylab("lat (deg)") + theme_bw()
 
-## ----cache=FALSE,eval=TRUE-----------------------------------------------
+## ----cache=FALSE,eval=TRUE----------------------------------------------------
 f <- co2avgret ~ lat + 1         # formula for fixed effects
 S <- SRE(f = f,                  # formula for fixed effects
          list(AIRS_05_2003),     # list of data objects
@@ -212,10 +212,10 @@ S <- SRE.fit(SRE_model = S,    # SRE model
              tol = 0.01,       # tolerance at which EM is assumed to have converged
              print_lik=FALSE)  # do not print log-likelihood at each iteration
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 isea3h_sp_poldf <- predict(S)          # fs variation is in the observation model
 
-## ----echo=FALSE,results='hide',message=FALSE-----------------------------
+## ----echo=FALSE,results='hide',message=FALSE----------------------------------
 X <- SpatialPolygonsDataFrame_to_df(sp_polys = isea3h_sp_poldf,
                                     vars = c("mu","var"))
 mumin <- quantile(X$mu,0.01)
@@ -262,10 +262,10 @@ g3 <- (EmptyTheme() +
 
 print(g3)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(spacetime)
 
-## ----message=FALSE-------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 data("NOAA_df_1990")             # load data
 Tmax <- subset(NOAA_df_1990,     # subset the data
               month %in% 7 &     # May to July
@@ -275,20 +275,20 @@ Tmax <- subset(NOAA_df_1990,     # subset the data
 (ggplot() + geom_point(data=Tmax,aes(lon,lat),size=0.5)) %>%
     draw_world() + coord_fixed(xlim = c(-115,-60), ylim = c(10,60)) + theme_bw()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 Tmax <- within(Tmax,
                {time = as.Date(paste(year,month,day,sep="-"))})  # create Date field
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 STObj <- stConstruct(x = Tmax,                    # dataset
                  space = c("lon","lat"),          # spatial fields
                  time="time",                     # time field
                  interval=TRUE)                   # time reflects an interval
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 STObj$std <- 2
 
-## ----warning=FALSE-------------------------------------------------------
+## ----warning=FALSE------------------------------------------------------------
 grid_BAUs <- auto_BAUs(manifold=STplane(),    # spatio-temporal process on the plane
                        data=STObj,            # data
                        cellsize = c(1,1,1),   # BAU cell size
@@ -298,21 +298,21 @@ grid_BAUs <- auto_BAUs(manifold=STplane(),    # spatio-temporal process on the p
                        nonconvex_hull=FALSE)  # convex hull
 grid_BAUs$fs = 1                       # fine-scale variation
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 G_spatial <- auto_basis(manifold = plane(),          # spatial functions on the plane
                         data=as(STObj,"Spatial"),    # remove the temporal dimension
                         nres = 1,                    # three resolutions
                         type = "bisquare",           # bisquare basis functions
                         regular = 1)                 # regular basis functions
 
-## ----warning=FALSE-------------------------------------------------------
+## ----warning=FALSE------------------------------------------------------------
 print(head(grid_BAUs@time))                                # show time indices
 G_temporal <- local_basis(manifold = real_line(),          # functions on the real line
                            type = "Gaussian",              # Gaussian functions
                            loc = matrix(seq(2,28,by=4)),   # locations of functions
                            scale = rep(3,7))               # scales of functions
 
-## ----message=FALSE-------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 basis_s_plot <- show_basis(G_spatial) + xlab("lon (deg)") + ylab("lat (deg)")
 basis_t_plot <- show_basis(G_temporal) + xlab("time index") + ylab(expression(phi(t)))
 
@@ -320,10 +320,10 @@ basis_t_plot <- show_basis(G_temporal) + xlab("time index") + ylab(expression(ph
 print(basis_s_plot)
 print(basis_t_plot)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 G <- TensorP(G_spatial,G_temporal)         # take the tensor product
 
-## ----SRE,results='hide',cache=FALSE--------------------------------------
+## ----SRE,results='hide',cache=FALSE-------------------------------------------
  f <- z ~ 1 + lat                 # fixed effects part
  S <- SRE(f = f,                  # formula
           data = list(STObj),     # data (can have a list of data)
@@ -338,7 +338,7 @@ G <- TensorP(G_spatial,G_temporal)         # take the tensor product
 
  grid_BAUs <- predict(S, obs_fs = FALSE)
 
-## ----message=FALSE,results='hide'----------------------------------------
+## ----message=FALSE,results='hide'---------------------------------------------
  analyse_days <- c(1,4,8,12,16,20)  # analyse only a few days
  df_st <- lapply(analyse_days,      # for each day
         function(i)
@@ -373,10 +373,10 @@ ggplot() +                          # Similar to above but with s.e.
     xlab("lon (deg)") + ylab("lat (deg)") +
     facet_wrap(~day) + theme_bw()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 proj4string(STObj) <- "+proj=longlat +ellps=sphere"
 
-## ----FRK2,cache=FALSE----------------------------------------------------
+## ----FRK2,cache=FALSE---------------------------------------------------------
 grid_BAUs <- auto_BAUs(manifold=STsphere(),       # spatio-temporal process on the sphere
                        data=STObj,                # data
                        cellsize = c(1,1,1),       # BAU cell size
@@ -394,27 +394,27 @@ grid_BAUs <- auto_BAUs(manifold=STsphere(),       # spatio-temporal process on t
 ## ----message=FALSE,echo=FALSE,fig.cap="Basis functions for FRK on the sphere with the \\tt{NOAA} dataset using two ISEA3H DGGs for location parameters of the basis functions.\\label{fig:basis_USA}",fig.height=9,fig.width=9,fig.pos="t!",out.width="0.7\\linewidth",fig.align="center"----
 draw_world(show_basis(G_spatial,ggplot())) + coord_map("ortho",orientation = c(35,-100,0)) + xlab("lon (deg)") + ylab("lat (deg)") + theme_bw()
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 data(AIRS_05_2003)   # load AIRS data
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 set.seed(1)
 AIRS_05_2003 <- mutate(AIRS_05_2003,           # take the data
                        std=co2std) %>%         # rename std
                 sample_n(20000)                # sample 20000 points
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 AIRS_05_2003 <- within(AIRS_05_2003,
                {time = as.Date(paste(year,month,day,sep="-"))})  # create Date field
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 STObj <- stConstruct(x = AIRS_05_2003,            # dataset
                  space = c("lon","lat"),          # spatial fields
                  time ="time",                    # time field
                  crs = CRS("+proj=longlat +ellps=sphere"),  # CRS
                  interval=TRUE)                   # time reflects an interval
 
-## ----eval=TRUE,cache=FALSE-----------------------------------------------
+## ----eval=TRUE,cache=FALSE----------------------------------------------------
 ## Prediction (BAU) grid
 grid_BAUs <- auto_BAUs(manifold=STsphere(),         # space-time field on sphere
                              data=time(STObj),      # temporal part of the data
@@ -442,7 +442,7 @@ ggplot(X2) +
     coord_map("ortho",orientation = c(-145,125,25)) +
     xlab("lon (deg)") + ylab("lat (deg)") + theme_bw()
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 G_spatial <- auto_basis(manifold = sphere(),      # functions on sphere
                         data=as(STObj,"Spatial"), # collapse time out
                         nres = 1,                 # use three DGGRID resolutions
@@ -457,7 +457,7 @@ G_temporal <- local_basis(manifold=real_line(),      # functions on real line
                           type = "Gaussian")
 G_spacetime <- TensorP(G_spatial,G_temporal)
 
-## ----eval=TRUE,message=FALSE,results='hide',cache=FALSE------------------
+## ----eval=TRUE,message=FALSE,results='hide',cache=FALSE-----------------------
 f <- co2avgret ~ lat +1           # formula for fixed effects
 S <- SRE(f = f,                   # formula
          data = list(STObj),      # spatio-temporal object
@@ -473,7 +473,7 @@ S <- SRE.fit(SRE_model = S,       # SRE model
 grid_BAUs <- predict(S, obs_fs = TRUE,         # fs variation is in obs. model
                      pred_time = c(4L,8L,12L)) # predict only at select days
 
-## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
+## ----echo=FALSE,message=FALSE,results='hide'----------------------------------
 X <- lapply(1:length(time(grid_BAUs)),
             function(i) {
                 SpatialPolygonsDataFrame_to_df(sp_polys = grid_BAUs[,i],
@@ -529,7 +529,7 @@ g3 <-  (EmptyTheme() +
 
 print(g3)
 
-## ----echo=FALSE,include=FALSE,warning=FALSE------------------------------
+## ----echo=FALSE,include=FALSE,warning=FALSE-----------------------------------
 # Generate observations with large spatial support
 data(meuse.grid)
 data(meuse)
@@ -556,7 +556,7 @@ coordnames(meuse_pols) <- c("x","y")
 coordinates(meuse) = ~x + y
 meuse_pols$zinc <- exp(over(meuse_pols,GridBAUs1)$mu)
 
-## ----message=FALSE,echo=FALSE,cache=FALSE,results='hide',warning=FALSE----
+## ----message=FALSE,echo=FALSE,cache=FALSE,results='hide',warning=FALSE--------
 set.seed(1)
 GridBAUs2 <- auto_BAUs(manifold = plane(),     # 2D plane
                      cellsize = c(100,100),   # BAU cellsize
@@ -612,7 +612,7 @@ g2 <- ggplot() +                          # Similar to above but with s.e.
 plot(g1)
 plot(g2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 set.seed(1)
 N <- 50
 sim_process <- expand.grid(x = seq(0.005,0.995,by=0.01),       # x grid
@@ -645,7 +645,7 @@ g2 <- ggplot() +
   print(g1)
   print(g2)
 
-## ----eval=TRUE-----------------------------------------------------------
+## ----eval=TRUE----------------------------------------------------------------
 scaler <- diag(c(4,1))                                    # scale x by 4
 asymm_measure <- new("measure",                           # new measure object
                       dist=function(x1,x2=x1)                # new distance function
@@ -653,11 +653,11 @@ asymm_measure <- new("measure",                           # new measure object
                                         x2 %*% scaler),   # scaling of second point
                       dim=2L)                             # in 2D
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 TwoD_manifold <- plane()                 # Create R2 plane
 TwoD_manifold@measure <- asymm_measure   # Assign measure
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 basis_locs <- seq(0,1,length=14) %>%                 # x locations
    expand.grid(seq(0,1,length=5)) %>%               # y locations
    as.matrix()                                      # convert to matrix
@@ -675,7 +675,7 @@ ggplot() +
                                             guide_legend(title=expression(phi[23](s)))) +
        xlab(expression(s[1])) + ylab(expression(s[2])) + theme_bw()
 
-## ----echo=FALSE,cache=FALSE,message=FALSE,results='hide'-----------------
+## ----echo=FALSE,cache=FALSE,message=FALSE,results='hide'----------------------
  ## Prediction (BAU) grid
  grid_BAUs <- auto_BAUs(manifold=plane(),
                         data=sim_data,
