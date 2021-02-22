@@ -6,7 +6,6 @@
 \alias{nres,Basis-method}
 \alias{nres_basis,Basis-method}
 \alias{nres,TensorP_Basis-method}
-\alias{nres_basis,Basis-method}
 \alias{nres,SRE-method}
 \alias{nres_SRE,SRE-method}
 \title{Return  the number of resolutions}
@@ -28,9 +27,9 @@ Return the number of resolutions from a basis function object.
 \examples{
 library(sp)
 set.seed(1)
-d <- data.frame(lon = runif(n=1000,min = -179, max = 179),
-                lat = runif(n=1000,min = -90, max = 90),
-                z = rnorm(5000))
+d <- data.frame(lon = runif(n=500,min = -179, max = 179),
+                lat = runif(n=500,min = -90, max = 90),
+                z = rnorm(500))
 coordinates(d) <- ~lon + lat
 proj4string(d)=CRS("+proj=longlat")
 

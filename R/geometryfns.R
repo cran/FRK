@@ -364,7 +364,7 @@ auto_BAUs <- function(manifold, type=NULL,cellsize = NULL,
     if(!is.null(isea3h_res)) {
 
         ## Check it's valid
-        if(!is.numeric(isea3h_res) | is.integer(isea3h_res))
+        if(!(is.numeric(isea3h_res) | is.integer(isea3h_res)))
             stop("isea3h_res needs to be of type 'numeric' or 'integer'")
         if(!on_sphere)
             stop("The problem is not on the surface of sphere. Please set isea3h_res to NULL")
@@ -1229,11 +1229,13 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPolygons"),
 #' @aliases map_data_to_BAUs,Spatial-method
 setMethod("map_data_to_BAUs",signature(data_sp="SpatialPixels"),
           function(data_sp,sp_pols,average_in_BAU = TRUE) {
-              if(is(data_sp, "SpatialPixels")) {
-                  data_sp <- as(data_sp, "SpatialPolygons")
-              } else {
+              coordlabels <- coordnames(data_sp)
+              if(is(data_sp, "SpatialPixelsDataFrame")) {
                   data_sp <- as(data_sp, "SpatialPolygonsDataFrame")
+              } else {
+                  data_sp <- as(data_sp, "SpatialPolygons")
               }
+              coordnames(data_sp) <- coordlabels
               map_data_to_BAUs(data_sp, sp_pols, average_in_BAU = average_in_BAU)
           })
 
@@ -1243,11 +1245,17 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPixels"),
 setMethod("map_data_to_BAUs",signature(data_sp="ST"),
           function(data_sp,sp_pols,average_in_BAU = TRUE) {
 
+              if(!(class(data_sp) == "STIDF"))
+                  stop("Currently spatio-temporal data where the spatial
+                      component is areal is under maintenance.
+                       Please contact the package maintainer")
+
               ## Initialise to no spatial field
               sp_fields <- NULL
 
               ## Coerce to STIDF if necessary and then project all the space-time data onto space
-              data_all_spatial <- as(as(data_sp,"STIDF"),"Spatial")
+              data_all_spatial <- as(as(as(data_sp,"STIDF"),"Spatial"),
+                                    "SpatialPointsDataFrame")
 
               ## Now we require all dates to be POSIXct, therefore convert
               if(!all(class(data_all_spatial$time) == "POSIXct")) {
@@ -1306,7 +1314,6 @@ setMethod("map_data_to_BAUs",signature(data_sp="ST"),
               ## Initialise
               time <- time_single <- sp <- n <- NULL
 
-
               ## For each BAU time point
               for(i in seq_along(sp_pols@time)) {
 
@@ -1314,7 +1321,7 @@ setMethod("map_data_to_BAUs",signature(data_sp="ST"),
                   if(!is.null(sp_fields[[i]])) {
 
                       ## Concatenate into a new data frame sp
-                      sp <- rbind(sp,sp_fields[[i]]@data)
+                      sp <- rbind(sp, sp_fields[[i]]@data)
 
                       ## The time field is simply the current time * number of data points
                       n <- nrow(sp_fields[[i]])
@@ -1325,7 +1332,7 @@ setMethod("map_data_to_BAUs",signature(data_sp="ST"),
                       if(is.null(time)) time <- this_time else time <- c(time,this_time)
                       if(is.null(time_single)) time_single <- this_time[1] else time_single <- c(time_single,this_time[1])
 
-                      ##F Finally this ensures the labels are from non-null field which could be first or last
+                      ### Finally this ensures the labels are from non-null field which could be first or last
                       coordlabels <- coordnames(sp_fields[[i]])
                   }
               }
@@ -1378,8 +1385,21 @@ setMethod("BuildC",signature(data="SpatialPolygons"),
               BAU_as_points <- SpatialPoints(coordinates(BAUs))   # convert BAUs to SpatialPoints
               i_idx <- j_idx <-  NULL                             # initialise
               for (i in 1L:length(data)) {                        # for each data point
+
                   this_poly <- SpatialPolygons(list(data@polygons[[i]]),1L) # extract polygon
+
+                  ## If data area spans one or more BAU centroids
                   overlap <- which(over(BAU_as_points,this_poly) == 1)      # see which BAUs are overlapped
+
+                  ## If data does not overlap any BAU centroid, then the area
+                  ## is very small -- simply find which polygon this data point falls in
+                  if(length(overlap) == 0) {
+                      crs <- CRS(proj4string(BAUs))
+                      datum_as_point <- SpatialPoints(this_poly, proj4string = crs)
+                      overlap <- over(datum_as_point, BAUs)$n
+                  }
+
+                  
                   i_idx <- c(i_idx,rep(i,length(overlap)))                  # the row index is the data number repeated
                   j_idx <- c(j_idx,as.numeric(overlap))                     # the column index is the BAU number
               }
@@ -1415,7 +1435,8 @@ setMethod("BuildC",signature(data="STFDF"),
               ## Since data is STFDF, the C matrix for one time points can be found and then
               ## replicated. Without loss of generality, the one-time-point C matrix is found
               ## by mapping the first time point data with the first time point BAU
-              C_one_time <- BuildC(data[,1],
+              data_poly <- as(data[, 1], "SpatialPolygonsDataFrame")
+              C_one_time <- BuildC(data_poly,
                                    BAUs[,1])
 
               ## The first row and column indices are those returned by the spatial BuildC
@@ -1434,14 +1455,18 @@ setMethod("BuildC",signature(data="STFDF"),
 
                   ## If data is covering more than one time point throw error (currently we do not cater)
                   ## for temporal change of support, and all data is assumed to occupy just one temporal BAU
-                  if(!length(overlap_time) == 1L)
+                  if(length(overlap_time) > 1L)
                       stop("Something is wrong in binning polygon data into BAUs.
-                           Note that currently we don't support temporal change of support.")
+                           Note that currently we don't support temporal change of support.
+                           Each datum can correspond to a spatial area for each time point
+                           but not a spatio-temporal volume.")
 
-                  t_idx <- as.numeric(BAUs@time[k])            # find the appropriate time index
-                  j_idx <- c(j_idx, (t_idx-1)*nrow(BAUs) + j)  # find the appropriate column indices and append
-                  i_idx <- c(i_idx, count*nrow(data) + i)      # row indices are simply shifted by
-                  # the amount of spatial locations in the data
+                  if(length(overlap_time) == 1L) {
+                      t_idx <- as.numeric(BAUs@time[k])            # find the appropriate time index
+                      j_idx <- c(j_idx, (t_idx-1)*nrow(BAUs) + j)  # find the appropriate column indices and append
+                      i_idx <- c(i_idx, count*nrow(data) + i)      # row indices are simply shifted by
+                                        # the amount of spatial locations in the data
+                  }
                   count <- count + 1                           # increment count
               }
               list(i_idx=i_idx,j_idx=j_idx)                     # return the (i,j) indices of nonzeros
@@ -1521,7 +1546,7 @@ load_dggrids <- function (res = 3L){
     isea3h <- NA # suppress binding warning
 
     ## Basic check
-    if(!is.numeric(res))
+    if(!(is.numeric(res) | is.integer(res)))
         stop("res needs to be an integer or vector of integers")
 
     ## We ship dggrids at res 6 or less with FRK. Finer resolutions are available with the dggrids package
