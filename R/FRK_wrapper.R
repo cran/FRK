@@ -33,11 +33,12 @@ FRK <- function(f,                     # formula (compulsory)
                 print_lik = FALSE,     # print log-likelihood at each iteration
                 response = c("gaussian", "poisson", "gamma",
                              "inverse-gaussian", "negative-binomial", "binomial"), 
-                link = c("identity", "log", "square-root", "logit", "probit", "cloglog", "inverse", "inverse-squared"),
+                link = c("identity", "log", "sqrt", "logit", "probit", "cloglog", "inverse", "inverse-squared"),
                 optimiser = nlminb,    # Optimiser for fitting (applicable only if method = 'TMB')
                 fs_by_spatial_BAU = FALSE,
                 known_sigma2fs = NULL, 
                 taper = NULL, 
+                simple_kriging_fixed = TRUE,
                 ...)                   # other arguments for BAUs/basis-function construction, or 
 {
 
@@ -68,7 +69,7 @@ FRK <- function(f,                     # formula (compulsory)
     }
     if (method == "TMB") {
         if (K_type != "precision") 
-            cat("For computational efficiency, setting K_type = 'precision', because method = 'TMB'; if you really want to use the K_type = 'block-exponential' with method = 'TMB', use SRE() and SRE.fit().\n")
+            cat("Since method = 'TMB', setting K_type = 'precision' for computational efficiency: If you really want to use K_type = 'block-exponential' with method = 'TMB', use SRE() and SRE.fit().\n")
         K_type <- "precision"
     }
     
@@ -83,14 +84,20 @@ FRK <- function(f,                     # formula (compulsory)
     .check_args2(n_EM = n_EM, tol = tol, method = method, print_lik = print_lik, 
                  response = response, link = link, K_type = K_type, lambda = lambda,
                  optimiser = optimiser, fs_by_spatial_BAU = fs_by_spatial_BAU, 
-                 known_sigma2fs = known_sigma2fs, BAUs = BAUs, taper = taper, ...)                      
+                 known_sigma2fs = known_sigma2fs, BAUs = BAUs, taper = taper, 
+                 simple_kriging_fixed = simple_kriging_fixed, ...)                      
 
     ## if there is a measurement error declared in all datasets then
     ## don't estimate it
     if(all(sapply(data,function(x) !is.null(x@data$std)))) {
-        cat("std already supplied with data -- not estimating the measurement error.
+        
+        ## Only report this to the user if est_error was set as TRUE
+        if (est_error) {
+            cat("std already supplied with data -- not estimating the measurement error.
               If you wish to estimate measurement error then set the std field to NULL\n")
-        est_error <- FALSE
+            est_error <- FALSE
+        }
+
     }
 
     ## Attempt to automatically find the manifold from the data
@@ -108,15 +115,17 @@ FRK <- function(f,                     # formula (compulsory)
     if(is.null(BAUs)) {
 
         cat("Constructing BAUs...\n")
-
         BAUs <- auto_BAUs(manifold = manifold, # Construct BAUs
                           data = data[[d]],    # Using the dataset with largest extent
                           ...)
         BAUs$fs <- 1                           #Default fine-scale variation at BAU level
     } else {
-        cat("Assuming fine-scale variation is homoscedastic\n")
-        if(is.null(BAUs$fs)) BAUs$fs <- 1      # If user supplied BAUs without fs field
-                                               # then add on the default and inform user
+        # If user supplied BAUs without fs field
+        # then add on the default and inform user
+        if(is.null(BAUs$fs)) {
+            cat("Assuming fine-scale variation is homoscedastic\n")
+            BAUs$fs <- 1 
+        }     
     }
 
     if(is.null(basis)) {
@@ -215,6 +224,7 @@ FRK <- function(f,                     # formula (compulsory)
                  optimiser = optimiser, 
                  known_sigma2fs = known_sigma2fs,
                  taper = taper,
+                 simple_kriging_fixed = simple_kriging_fixed,
                  ...) 
 
     ## Return fitted SRE model

@@ -37,7 +37,7 @@
     if (link == "cloglog")         psi <- function(Y) 1 - exp(-exp(Y))
     if (link == "inverse")         psi <- function(Y) 1/Y
     if (link == "inverse-squared") psi <- function(Y) 1/(sqrt(Y))
-    if (link == "square-root")     psi <- function(Y) Y^2
+    if (link == "sqrt")     psi <- function(Y) Y^2
     return(psi)
     
   } else if (kind == "mu_to_Y") {
@@ -48,7 +48,7 @@
     if (link == "cloglog")         g <- function(mu) log(-log(1 - mu))
     if (link == "inverse")         g <- function(mu) 1/mu
     if (link == "inverse-squared") g <- function(mu) 1/(mu^2)
-    if (link == "square-root")     g <- function (mu) sqrt(mu)
+    if (link == "sqrt")     g <- function (mu) sqrt(mu)
     return(g)
     
   } else if (kind == "Y_to_prob") {
@@ -493,5 +493,25 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
   Q <- Matrix::bdiag(Q_matrices)
   
   return(list(Q = Q, nnz = nnz))
+}
+
+# Facilitates user input regardless of how this script was invoked
+user_decision <- function(prompt) {
+  
+  if (interactive()) {
+    answer <- readline(prompt)
+  } else {
+    cat(prompt)
+    answer <- readLines("stdin", n = 1)
+  }
+  
+  answer <- toupper(answer)
+  
+  if (answer != "Y" && answer != "N") {
+    cat("Please enter Y or N.\n")
+    answer <- user_decision(prompt)
+  }
+  
+  return(answer)
 }
 

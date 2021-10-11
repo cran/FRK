@@ -219,6 +219,29 @@ setGeneric("remove_basis", function(Basis,rmidx)
     standardGeneric("remove_basis"))
 
 
+#' @title Combine basis functions
+#' @description Takes a list of objects of class \code{Basis} and returns a 
+#' single object of class \code{Basis}.   
+#' @param Basis_list a list of objects of class \code{Basis}. Each element of the list is assumed to 
+#' represent a single resolution of basis functions
+#' @export
+#' @seealso \code{\link{auto_basis}} for automatically constructing basis functions and \code{\link{show_basis}} for visualising basis functions
+#' @examples
+#'## Construct two resolutions of basis functions using local_basis() 
+#'Basis1 <- local_basis(manifold = real_line(), 
+#'                      loc = matrix(seq(0, 1, length.out = 3), ncol = 1), 
+#'                      scale = rep(0.4, 3))
+#'
+#'Basis2 <- local_basis(manifold = real_line(), 
+#'                      loc = matrix(seq(0, 1, length.out = 6), ncol = 1), 
+#'                      scale = rep(0.2, 6))
+#'
+#'## Combine basis-function resolutions into a single Basis object
+#'combine_basis(list(Basis1, Basis2)) 
+setGeneric("combine_basis", function(Basis_list)
+    standardGeneric("combine_basis"))
+
+
 
 #' @title Observed (or unobserved) BAUs
 #' @description Computes the indices (a numeric vector) of the observed (or unobserved) BAUs
@@ -266,6 +289,7 @@ setGeneric("loglik", function(object)
 #' @param subset_time (optional) a vector of times to be included; applicable only for \code{STFDF} objects
 #' @param palette the palette supplied to the argument \code{palette} of \code{scale_*_distiller()}. Alternatively, if \code{palette} = "nasa", a vibrant colour palette is created using \code{scale_*_gradientn()}
 #' @param plot_over_world logical; if \code{TRUE}, \code{coord_map("mollweide")} and \code{\link{draw_world}} are used to plot over the world
+#' @param labels_from_coordnames logical; if \code{TRUE}, the coordinate names of \code{newdata} (i.e., \code{coordnames(newdata)}) are used as the horizontal- and vertical-axis labels. Otherwise, generic names, s_1 and s_2, are used
 #' @param ... optional arguments passed on to whatever geom is appropriate for the \code{Spatial*DataFrame} or \code{STFDF} object (\code{geom_point}, \code{geom_tile}, \code{geom_raster}, or \code{geom_polygon})
 #' @return A list of \code{ggplot} objects corresponding to the provided \code{column_names}. This list can then be supplied to, for example, \code{ggpubr::ggarrange()}.
 #' @seealso \code{\link{plot}}
@@ -273,7 +297,8 @@ setGeneric("loglik", function(object)
 #' @examples 
 #' ## See example in the help file for FRK
 setGeneric("plot_spatial_or_ST", function(newdata, column_names,  map_layer=NULL, 
-                                          subset_time=NULL, palette="Spectral", plot_over_world=FALSE, ...)
+                                          subset_time=NULL, palette="Spectral", plot_over_world=FALSE, 
+                                          labels_from_coordnames = TRUE, ...)
     standardGeneric("plot_spatial_or_ST"))
 
 

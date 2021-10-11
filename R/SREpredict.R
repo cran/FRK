@@ -14,6 +14,9 @@ setMethod("predict", signature="SRE", function(object, newdata = NULL, obs_fs = 
                                                percentiles = c(5, 95), 
                                                kriging = "simple") {
   
+  ## Note that the following code must be done before .check_args3() because it
+  ## alters the input, rather than simpling throwing a warning or error. 
+  
   ## Need to add prediction and uncertainty at each location, and so newdata 
   ## must be a Spatial*DataFrame (not just a Spatial* object).
   newdata <- .Coerce_SpatialDataFrame(newdata)
@@ -21,20 +24,34 @@ setMethod("predict", signature="SRE", function(object, newdata = NULL, obs_fs = 
   ## The user can either provide k in object@BAUs$k_BAU, or in the predict call.
   ## This is so that the user can change k without having to call SRE() and SRE.fit() again.
   ## The k supplied in predict() will take precedence over the k stored in object@BAUs$k.
+
+  k_BAU <- object@BAUs$k_BAU # size parameter at the BAU level (could be NULL)
+  N <- length(object@BAUs)   # number of BAUs
+  
   if (object@response %in% c("binomial", "negative-binomial")) {
-    if (is.null(k) && is.null(object@BAUs$k_BAU)) {
-      k <- rep(1, length(object@BAUs))
-      cat("The size parameter, k, was not provided for prediction: assuming k is equal to 1 for all prediction locations.\n")
-    } else if (is.null(k) && !is.null(object@BAUs$k_BAU)) {
-        if (any(is.na(object@BAUs$k_BAU))) {
-          k <- rep(1, length(object@BAUs))
-          cat("The size parameter, k, at the BAU level contained some NAs: simply assuming k is equal to 1 for all prediction locations.\n")
+    if (is.null(k)) {
+      if(is.null(k_BAU)) {
+        k <- rep(1, N)
+        cat("Assuming the size parameter, k, is equal to 1 for all prediction locations: If you want to change this, use the argument 'k' in predict.\n")
+      } else {
+        if (any(is.na(k_BAU))) {
+          
+          ## If there's only a single non-NA value, it's safe to assume 
+          ## That this value can be used for all BAUs (this typically happens
+          ## in the case of Bernoulli data, where the non-NA value is 1).
+          k_BAU_NA_removed <- k_BAU[!is.na(k_BAU)]
+          if (length(unique(k_BAU_NA_removed)) == 1) {
+            k <- rep(unique(k_BAU_NA_removed), N)
+          } else {
+            k <- rep(1, N)
+            cat("Assuming the size parameter, k, is equal to 1 for all prediction locations: If you want to change this, use the argument 'k' in predict.\n")
+          }
         } else {
-          k <- object@BAUs$k_BAU
+          k <- k_BAU
         }
+      }
     }
   }
-
   
   ## Check the arguments are OK
   .check_args3(obs_fs = obs_fs, newdata = newdata, 
@@ -425,10 +442,17 @@ setMethod("predict", signature="SRE", function(object, newdata = NULL, obs_fs = 
   ## matrix of the fixed and random effects. If we are doing simple kriging, 
   ## use only the random effect block of the precision matrix.
   if (kriging == "universal") Q_posterior <- M@Q_posterior
-  if (kriging == "simple")    Q_posterior <- M@Q_posterior[-(1:p), -(1:p)]
+  if (kriging == "simple") {
+    if (M@simple_kriging_fixed) {
+      Q_posterior <- M@Q_posterior
+    } else {
+      Q_posterior <- M@Q_posterior[-(1:p), -(1:p)]
+    }
+  } 
   Q_L <- sparseinv::cholPermute(Q = Q_posterior)
   
-  ## Generate Monte Carlo samples at all BAUs
+  ## Generate Monte Carlo samples at all BAUs (or over arbitrary prediction 
+  ## regions given in the argument newdata)
   MC <- .MC_sampler(M = M, X = X, type = type, obs_fs = obs_fs, 
                     n_MC = n_MC, k = k, Q_L = Q_L, obsidx = obsidx, 
                     predict_BAUs = predict_BAUs, CP = CP, kriging = kriging)
@@ -661,22 +685,23 @@ setMethod("predict", signature="SRE", function(object, newdata = NULL, obs_fs = 
   
   ## Create the relevant link functions.
   if (M@response %in% c("binomial", "negative-binomial") & M@link %in% c("logit", "probit", "cloglog")) {
-    finv    <- .link_fn("Y_to_prob", link = M@link)
-    hinv     <- .link_fn("prob_to_mu", response = M@response)
+    finv  <- .link_fn("Y_to_prob", link = M@link)
   } else {
-    ginv     <- .link_fn("Y_to_mu", link = M@link) 
+    ginv  <- .link_fn("Y_to_mu", link = M@link) 
+  }
+  
+  if(M@response %in% c("binomial", "negative-binomial")) {
+    hinv  <- .link_fn("prob_to_mu", response = M@response)
+    h     <- .link_fn("mu_to_prob", response = M@response)
   }
   
   ## Create the mu samples (and prob parameter if applicable)
   if (M@response %in% c("binomial", "negative-binomial") & M@link %in% c("logit", "probit", "cloglog")) {
     prob_samples <- finv(Y = Y_samples)
     mu_samples   <- hinv(p = prob_samples, k = k)
-  } else if (M@response == "negative-binomial" & M@link %in% c("log", "square-root")) {
+  } else if (M@response == "negative-binomial" & M@link %in% c("log", "sqrt")) {
     mu_samples   <- k * ginv(Y_samples) 
-    ## Don't use prob_samples in any of the following computations, but construct
-    ## the samples anyway as they may be of interest. 
-    f            <- .link_fn(kind = "mu_to_prob", response = M@response)
-    prob_samples <- f(mu = mu_samples, k = k)
+    prob_samples <- h(mu = mu_samples, k = k)
   } else if (M@response == "gaussian" && M@link == "identity" && obs_fs) {
     mu_samples <- Y_smooth_samples
   } else {
@@ -686,15 +711,17 @@ setMethod("predict", signature="SRE", function(object, newdata = NULL, obs_fs = 
   
   # ---- Predicting over arbitrary polygons ----
   
-  if (!predict_BAUs) 
-    mu_samples <- as.matrix(CP %*% mu_samples)
+  if (!predict_BAUs) mu_samples <- as.matrix(CP %*% mu_samples)
+  
+  if (!predict_BAUs & M@response %in% c("binomial", "negative-binomial")) {
+    k_P <- CP %*% k
+    prob_samples <- as.matrix(h(mu_samples, k_P))
+  }
   
   ## Output the mean samples. If probability parameter was computed, and 
   ## we are predicting over the BAUs, also output.
   MC$mu_samples <- mu_samples
-  if (exists("prob_samples") & predict_BAUs) 
-    MC$prob_samples <- prob_samples
-  
+  if (exists("prob_samples")) MC$prob_samples <- prob_samples
   
   ## If the response is not a quanitity of interest, exit the function
   if (!("response" %in% type)) return(MC)

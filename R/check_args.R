@@ -10,7 +10,7 @@
   if(length(all.vars(f)[-1]) == 0 && !attr(terms(f), "intercept"))
     stop("We must have at least one covariate (possibly just an intercept) in the formula f. In particular, f = Z ~ -1 is not permitted.")
   if(!is(data,"list"))
-    stop("Please supply a list of Spatial objects.")
+    stop("Please supply a *list* of Spatial or Spatio-temporal objects.")
   if(!all(sapply(data,function(x) is(x,"Spatial") | is(x,"ST"))))
     stop("All data list elements need to be of class Spatial or ST")
   if(!(is(BAUs,"SpatialPointsDataFrame") | is(BAUs,"SpatialPolygonsDataFrame") | is(BAUs,"SpatialPixelsDataFrame") | is(BAUs,"STFDF")))
@@ -55,14 +55,7 @@
   if(response == "gaussian" && !est_error && !all(sapply(data, function(x) x$std >= 0)))
     stop("If the response is Gaussian and observational error is not going to be estimated,
              the std field must contain only positive numbers")
-  
-  # ## Do we have a mixture of point and areal data?
-  # mixture <- any(sapply(data, is, "SpatialPoints")) && any(sapply(data, is, "SpatialPolygons"))
-  # if (response %in% c("binomial", "negative-binomial") && mixture) {
-  #   stop("If the response distribution is associated with a size-paremeter (e.g., binomial or negative-binomial), 
-  #        all data sets must be the same class")
-  # }
-  
+
   
   if(!(K_type %in% c("block-exponential", "precision", "unstructured")))
     stop("Invalid K_type argument. Please select from 'block-exponential', 'precision', 'unstructured', or 'separable'")
@@ -71,61 +64,62 @@
   if (K_type == "block-exponential" & response != "gaussian")
     warning("Using the block-exponential covariance matrix (K_type = 'block-exponential') is computationally inefficient with a non-Gaussian response (more specifically, when method = 'TMB'). For these situations, consider using K_type = 'precision'.")
   
-  # if (K_type == "separable" & is(basis,"TensorP_Basis"))
-  # stop("K_type = 'separable' is not yet implemented in a space-time setting.")
-  
-  # ## If K_type == separable, the basis functions must be in a regular rectangular lattice
-  # if (K_type == "separable") 
-  #   for (i in unique(basis@df$res)) {
-  #     temp <- basis@df[basis@df$res == i, ]
-  #     if (!.test_regular_grid(temp$loc1, temp$loc2, rectangular = TRUE) ) 
-  #       stop("Basis functions must be arranged in a regular rectangular lattice when K_type = 'separable'.")
-  #   }
-  
-  # ## If K_type == "neighbour", we just need basis functions to be in a regular 
-  # ## lattice (does not need to be rectangular)
-  #   if (K_type == "neighbour") 
-  #     for (i in unique(basis@df$res)) {
-  #       temp <- basis@df[basis@df$res == i, ]
-  #       if (!.test_regular_grid(temp$loc1, temp$loc2, rectangular = FALSE) ) 
-  #         stop("Basis functions must be arranged in a regular lattice when K_type = 'precision'.")
-  #     }  
-  
   ## Check that valid data model and link function have been chosen
   if (!(response %in% c("gaussian", "poisson", "gamma", "inverse-gaussian", "negative-binomial", "binomial")))
     stop("Invalid response argument")
-  if (!(link %in% c("identity", "log", "square-root", "logit", "probit", "cloglog", "inverse", "inverse-squared")))
+  if (!(link %in% c("identity", "log", "sqrt", "logit", "probit", "cloglog", "inverse", "inverse-squared")))
     stop("Invalid link argument")
   ## Check that an appropriate response-link combination has been chosen
-  if (response == "gaussian" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "square-root")) ||
-      response == "poisson" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "square-root")) ||
-      response == "gamma" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "square-root")) ||
-      response == "inverse-gaussian" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "square-root")) ||
-      response == "negative-binomial" & !(link %in% c("log", "square-root", "logit", "probit", "cloglog")) ||
+  if (response == "gaussian" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "sqrt")) ||
+      response == "poisson" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "sqrt")) ||
+      response == "gamma" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "sqrt")) ||
+      response == "inverse-gaussian" & !(link %in% c("identity", "inverse", "log", "inverse-squared", "sqrt")) ||
+      response == "negative-binomial" & !(link %in% c("log", "sqrt", "logit", "probit", "cloglog")) ||
       response == "binomial" & !(link %in% c("logit", "probit", "cloglog"))) {
     stop("Invalid response-link combination selected. Please choose an appropriate link function for the specified response distribution.")
   }
   ## Provide a warning if a possibly problematic combination is chosen
-  if (response == "gaussian" & link %in% c("log", "inverse-squared", "square-root") ||
+  if (response == "gaussian" & link %in% c("log", "inverse-squared", "sqrt") ||
       response == "poisson" & link %in% c("identity", "inverse", "inverse-squared") ||
       response == "gamma" & link %in% c("identity", "inverse", "inverse-squared") ||
       response == "inverse-gaussian" & link %in% c("inverse-squared")) {
     warning("Due to the implied range of the mean function, and the permitted support of the mean for the specified response, nonsensical results are possible with the chosen link function. Consider using a link function which ensures the mean is mapped to the correct support.")
   }
   
-  ## Check k_Z (size parameter for data)
+
+  ## Check the known-constant size parameters
   if (response %in% c("binomial", "negative-binomial")) {
-    if (!all(sapply(data, function(l) "k_Z" %in% names(l)))) {
-      stop("For binomial or negative-binomial data, the known constant size parameter must be provided for each observation. Please provide this in the data object, in a field called 'k_Z'.")
-    } else if (!all(sapply(data, function(l) class(l$k_Z) %in% c("numeric", "integer")))) {
-      stop("The known constant size parameter must contain only positive integers.")
-    } else if (any(sapply(data, function(l) any(l$k_Z <= 0))) | 
-               !all(sapply(data, function(l) all(l$k_Z == round(l$k_Z))))) {
-      stop("The known constant size parameter must contain only positive integers.")
+    
+    ## Check that either the BAU-level size parameter, k_BAU, or the 
+    ## observation-support size parameters, k_Z, are provided:
+    k_BAU_present <- "k_BAU" %in% names(BAUs)
+    k_Z_present <- all(sapply(data, function(l) "k_Z" %in% names(l)))
+    
+    if (!k_BAU_present && !k_Z_present) {
+      stop("For binomial or negative-binomial data, the known constant size parameters (e.g., the number of trials or the target number of 'successes') must be provided with either the observations or the BAUs (see Section 2.5 of the FRK v2 paper for details).")
+    } else if (k_BAU_present && k_Z_present) {
+      cat("You have provided the size parameter with both the observations and the BAUs: Only one set of size parameters will be used in the model fitting stage (see Section 2.5 of the FRK v2 paper for details).\n")
     }
+    
+    ## Now check that the provided size parameters are positive integers
+    if (k_Z_present) {
+      if (!all(sapply(data, function(l) class(l$k_Z) %in% c("numeric", "integer")))) {
+        stop("The known constant size parameters must contain only positive integers.")
+      } else if (any(sapply(data, function(l) any(l$k_Z <= 0))) |
+                 !all(sapply(data, function(l) all(l$k_Z == round(l$k_Z))))) {
+        stop("The known constant size parameters must contain only positive integers.")
+      }
+    } else if (k_BAU_present) {
+      if (!(class(BAUs@data[, "k_BAU"]) %in% c("numeric", "integer"))) {
+        stop("The known constant size parameters must contain only positive integers.")
+      } 
+    }
+    
   } else {
-    ## it is unlikely to occur, but here we ensure that k_Z and k_BAU 
-    ## are not used for other variables: these terms are treated specially.
+    ## If we do not have binomial or negative-binomial data, ensure that k_Z and 
+    ## k_BAU are not used: these terms are treated specially in FRK, and are 
+    ## hence reserved words. (Note that this is why we use 'k_BAU' rather than
+    ## 'k', as 'k' could be used quite often by the user.)
     if(any(sapply(data,function(x) any("k_Z" %in% names(x@data)))))
       stop("k_Z is a reserved keyword for the size parameter in a binomial or negative-binomial setting; please do not include it as a covariate name in the data objects.")
     if("k_BAU" %in% names(BAUs@data))
@@ -160,7 +154,7 @@
 ## Checks arguments for the SRE.fit() function. Code is self-explanatory
 .check_args2 <- function(n_EM, tol, lambda, method, print_lik, optimiser, 
                          response, K_type, link, fs_by_spatial_BAU, known_sigma2fs, 
-                         BAUs, taper, ...) {
+                         BAUs, taper, simple_kriging_fixed, ...) {
   
   if(!is.numeric(n_EM)) stop("n_EM needs to be an integer")
   if(!(n_EM <- round(n_EM)) > 0) stop("n_EM needs to be greater than 0")
@@ -234,19 +228,29 @@
     }
   }
 
+  if (!is.logical(simple_kriging_fixed)) 
+    stop("simple_kriging_fixed should be a logical")
+  
+  # if (simple_kriging_fixed && method == "TMB")
+  #   cat("simple_kriging_fixed = TRUE is faster but precludes universal kriging in the prediction stage: Proceed if you are happy to commit to simple kriging (if you are unfamiliar with simple vs. universal kriging, ignore this message and proceed).\n")
+  
+  if (!simple_kriging_fixed && method == "EM")
+    warning("simple_kriging_fixed is ignored if method = 'EM', since universal kriging is not implemented for method = 'EM'")
+  
 }
 
 ## Checks arguments for the predict() function. Code is self-explanatory
 .check_args3 <- function(obs_fs, newdata, pred_polys,
                          pred_time, covariances, object, type, 
                          k, percentiles, kriging, ...) {
-  # if(!is.null(newdata)) {
-  #   if(!all(coordnames(newdata) == coordnames(object@BAUs)))
-  #     stop("The coordinate names of newdata do not match those of the BAUs.")
-  # }
-
+  
   if(kriging != "simple" && object@method == "EM")
     stop("Universal kriging is only available when method = 'TMB'")
+  
+  if (kriging == "universal" && object@simple_kriging_fixed) 
+    stop("You cannot set kriging = 'universal' at the prediction stage if you 
+         set simple_kriging_fixed = TRUE in the fitting stage: Please either refit 
+         the model with simple_kriging_fixed = FALSE or set kriging = 'simple'.")
   
   if(!(obs_fs %in% 0:1)) stop("obs_fs needs to be logical")
   
@@ -267,7 +271,7 @@
   ## Check k (for predictions)
   if (object@response %in% c("binomial", "negative-binomial")) {
     if(length(k) == 1){
-      warning("Single number k provided for all BAUs: assuming k is invariant over the whole spatial domain.")
+      cat("Single number k provided for all BAUs: assuming k is invariant over the whole spatial domain.\n")
     } else if (!(class(k) %in% c("numeric", "integer"))) {
       stop("k must contain only positive integers.")
     } else if (any(k < 0) | any(k != round (k))) {

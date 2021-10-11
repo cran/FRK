@@ -311,11 +311,17 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
                  user_args)
   plots <- do.call(plot_spatial_or_ST, args_list)
   
+
+  ## First we determine if the user has predicted over the BAUs or over arbitrary
+  ## prediction regions. To assess this, we will test if newdata has the same 
+  ## number of elements as the BAUs (this is not foolproof, but good enough).
+  pred_over_BAUs <- length(object@BAUs) == length(newdata)
+  
   ## Edit labels
   split_column_names <- strsplit(column_names, "_")
   names(split_column_names) <- column_names
   for (i in column_names) {
-    plots[[i]] <- plots[[i]] + .custom_lab(split_column_names[[i]])
+    plots[[i]] <- plots[[i]] + .custom_lab(split_column_names[[i]], pred_over_BAUs)
   }
   
   ## Now plot the data. Note that here we use a simple call to plot_spatial_or_ST(), 
@@ -332,7 +338,7 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
         ## observations are associated with multiple BAUs; don't do it in this case.
         Cmat_dgT <- as(object@Cmat, "dgTMatrix")
         if (!all(tabulate(Cmat_dgT@i + 1) == 1) || any(tabulate(Cmat_dgT@j + 1) > 1)) {
-          warning("The data set stored in object@data is of class STIDF. In this case, 
+         cat("The data set stored in object@data is of class STIDF. In this case, 
                   we normally use the binned data in object@Z to plot over the BAUs. However,
                   some observations are associated with multiple BAUs, or there 
                   are some BAUs associated with multiple observations (probably because 
@@ -345,11 +351,7 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
           ## If NAs are present (i.e., some of the BAUs are unobserved), 
           ## tell the user. This will illuminate a warning thrown later as well.
           if (any(is.na(binned_data))) {
-            warning("To plot the STIDF data provided in the SRE object, we use the 
-                    binned data in object@Z to plot over the BAUs. The unobserved 
-                    BAUs (i.e., those that are not associated with any 
-                    elements of object@Z) are given a value of NA. 
-                    ")
+            cat("To plot the STIDF data provided in the SRE object, we use the binned data in object@Z to plot over the BAUs. The unobserved BAUs (i.e., those that are not associated with any elements of object@Z) are given a value of NA.\n")
           }
           object@BAUs@data[, response_name] <- binned_data
           data_plots <- plot_spatial_or_ST(object@BAUs, response_name, ...)
@@ -358,9 +360,8 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
         ## We may have a combination of STIDF and STFDF, and we don't know which 
         ## dataset each element of object@Z is associated with. This is a bit 
         ## complicated, so we don't do it. 
-        warning("Multiple data sets were used in the analysis, and because at 
-                least one is of class STIDF, we will not plot the data. 
-                Please contact the package maintainer if you would like help plotting the data.")
+        cat("Multiple data sets were used in the analysis, and because at 
+                least one is of class STIDF, we will not plot the data (we don't have a method for this).\n")
       }
     } else {
       data_plots <- sapply(object@data, plot_spatial_or_ST, response_name, ...)
@@ -395,7 +396,7 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
 
 
 
-.custom_lab <- function(v) {
+.custom_lab <- function(v, pred_over_BAUs) {
     # v is a vector, with first entry indicating the type of plot we are making a 
     ## label for, and the second entry indicating the quantity of interest    
     type <- v[1]; x <- v[2]
@@ -403,20 +404,28 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
     ## Set the unicode character for the quantity of interest
     ## See https://en.wikipedia.org/wiki/List_of_Unicode_characters#Greek_and_Coptic
     # for the a list of unicode characters.
-    unicode <- if (x == "Y") "Y" else if (x == "mu") "\U03BC" else if (x == "prob") "\U03C0" else if (x == "Z") "Z"
+    unicode <- if (x == "Y") "Y" else if (x == "mu") "\U03BC" else if (x == "prob") "\U03C0" else if (x == "Z") "Z*"
+
+    if (pred_over_BAUs) {
+      process <-  bquote(bold(.(unicode)))
+    } else {
+      process <-  bquote(bold(.(unicode))[P])
+    }
     
-    pred <- bquote(widehat(p)[.(unicode)]["|"][bold(Z)])
-    process <- bquote(paste(.(unicode), "(\U00B7)"))
+    expectation <- bquote(paste("E(", .(process), " | ", bold(Z), ", ", bold("\U03B8"), ")    "))
     
     ## Construct the labels
     ## NB: Add a couple of spaces to ensure no overlap between label and the 
     ## fill box when arranged with legend at top
     label <- if (type == "p") {
-        bquote(paste(.(pred), " \U2261 ", "E(", .(process), " | ", bold(Z), ", ", bold("\U03B8"), ")    "))
+      # expectation
+      # bquote(paste("Prediction\n", .(expectation)))
+      bquote(atop("Prediction    ", .(expectation)))
     } else if (type == "RMSPE") {
-        bquote(paste("RMSPE(", .(pred), ", ", .(process),")  "))
+        bquote(paste("RMSPE(", .(expectation), ", ", .(process),")  "))
     } else if (type == "interval90") {
-        bquote(paste("90% predictive\ninterval width for " * .(process), "  "))
+        # bquote(paste("90% prediction-\ninterval width for " * .(process), "  "))
+        bquote(atop("90% prediction-", "interval width for " * .(process), "  "))
     }
     
     return(labs(fill = label))
@@ -431,7 +440,7 @@ setMethod("plot", signature(x = "SRE", y = "SpatialPolygonsDataFrame"), function
 setMethod("plot_spatial_or_ST", signature(newdata = "STFDF"), 
           function(newdata, column_names,  map_layer = NULL, 
                    subset_time = NULL, palette = "Spectral", 
-                   plot_over_world = FALSE, ...) {
+                   plot_over_world = FALSE, labels_from_coordnames = TRUE, ...) {
       
       ## Get the coordinate names 
       coord_names <- coordnames(newdata)
@@ -446,7 +455,9 @@ setMethod("plot_spatial_or_ST", signature(newdata = "STFDF"),
       plots <- .plot_spatial_or_ST_common(
           newdata = newdata, column_names = column_names, coord_names = coord_names, 
           time_name = time_name, map_layer = map_layer, 
-          palette = palette, plot_over_world = plot_over_world, ...
+          palette = palette, plot_over_world = plot_over_world, 
+          labels_from_coordnames = labels_from_coordnames,
+          ...
           )
       return(plots)
 })        
@@ -457,7 +468,7 @@ setMethod("plot_spatial_or_ST", signature(newdata = "STFDF"),
 setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPointsDataFrame"), 
           function(newdata, column_names,  map_layer = NULL, 
                    subset_time = NULL, palette = "Spectral", 
-                   plot_over_world = FALSE, ...) {
+                   plot_over_world = FALSE, labels_from_coordnames = TRUE, ...) {
     
     ## Get the coordinate names, and time_name is NULL in the spatial setting
     coord_names <- coordnames(newdata)
@@ -466,7 +477,9 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPointsDataFrame"),
     .plot_spatial_or_ST_common(
         newdata = newdata, column_names = column_names, coord_names = coord_names, 
         time_name = time_name, map_layer = map_layer, 
-        palette = palette, plot_over_world = plot_over_world, ...
+        palette = palette, plot_over_world = plot_over_world, 
+        labels_from_coordnames = labels_from_coordnames, 
+        ...
     )
 })
 
@@ -475,7 +488,7 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPointsDataFrame"),
 setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPixelsDataFrame"), 
           function(newdata, column_names,  map_layer = NULL, 
                    subset_time = NULL, palette = "Spectral", 
-                   plot_over_world = FALSE, ...) {
+                   plot_over_world = FALSE, labels_from_coordnames = TRUE,...) {
             
             ## Get the coordinate names, and time_name is NULL in the spatial setting
             coord_names <- coordnames(newdata)
@@ -484,7 +497,9 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPixelsDataFrame"),
             .plot_spatial_or_ST_common(
               newdata = newdata, column_names = column_names, coord_names = coord_names, 
               time_name = time_name, map_layer = map_layer, 
-              palette = palette, plot_over_world = plot_over_world, ...
+              palette = palette, plot_over_world = plot_over_world, 
+              labels_from_coordnames = labels_from_coordnames, 
+              ...
             )
           })
 
@@ -494,7 +509,7 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPixelsDataFrame"),
 setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"), 
           function(newdata, column_names,  map_layer = NULL, 
                    subset_time = NULL, palette = "Spectral", 
-                   plot_over_world = FALSE, ...) {
+                   plot_over_world = FALSE, labels_from_coordnames = TRUE, ...) {
             
             ## Get the coordinate names, and time_name is NULL in the spatial setting
             coord_names <- coordnames(newdata)
@@ -503,12 +518,14 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"),
             .plot_spatial_or_ST_common(
               newdata = newdata, column_names = column_names, coord_names = coord_names, 
               time_name = time_name, map_layer = map_layer, 
-              palette = palette, plot_over_world = plot_over_world, ...
+              palette = palette, plot_over_world = plot_over_world, 
+              labels_from_coordnames = labels_from_coordnames, 
+              ...
             )
           })
 
 .plot_spatial_or_ST_common <- function(
-    newdata, column_names, coord_names, time_name, map_layer, palette, plot_over_world, ...
+    newdata, column_names, coord_names, time_name, map_layer, palette, plot_over_world, labels_from_coordnames, ...
 ) {
   
     ## Inclusion of "-" characters can cause problems; convert to "_"
@@ -538,7 +555,8 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"),
     ## Plot the requested columns
     plots <- lapply(1:length(column_names), 
                     function(i, x, y, ...) {
-                        .plot(df, x[i], coord_names, time_name, sp_type, map_layer, y[i], plot_over_world, ...)
+                        .plot(df, x[i], coord_names, time_name, sp_type, map_layer, 
+                              y[i], plot_over_world, labels_from_coordnames, ...)
                     }, x = column_names, y = palette, ...)
     
     suppressMessages( # suppress message about adding a new coordinate system
@@ -555,7 +573,7 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"),
 
 #### This function creates the individual plots.
 
-.plot <- function(df, column_name, coord_names, time_name, sp_type, map_layer, palette, plot_over_world, ...){
+.plot <- function(df, column_name, coord_names, time_name, sp_type, map_layer, palette, plot_over_world, labels_from_coordnames, ...){
     
     ## Basic plot
     if (!is.null(map_layer)) {
@@ -581,10 +599,7 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"),
     ## If NAs are present, tell the user that we hard-code the colour/fill for 
     ## the pixels with NA values to be transparent 
     if (any(is.na(df[, column_name]))) {
-      warning("NA values detected in the data, which will be transparent in the 
-      final plot. If you want them to show up in the plot, take the returned 
-      plot object and add a colour/fill scale with na.value equal to whatever 
-      colour you want.")
+      cat("NA values detected in the data, which will be transparent in the final plot. If you want them to show up in the plot, take the returned plot object and add a colour/fill scale with na.value equal to whatever colour you want.\n ")
     }
     if (palette == "nasa") {
       colour_fn <- scale_colour_gradientn(colours = nasa_palette, na.value = "transparent")
@@ -615,6 +630,9 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"),
     
     if (!is.null(time_name))
         gg <- gg + facet_wrap(as.formula(paste("~", time_name)))
+    
+    if (!labels_from_coordnames)
+      gg <- gg + labs(x = expression(s[1]), y = expression(s[2]))
 
     return(gg)
 }
@@ -650,7 +668,7 @@ setMethod("plot_spatial_or_ST", signature(newdata = "SpatialPolygonsDataFrame"),
     ## check all original column names are present
     if (!all(original_names %in% names(df)))
       warning("Some of the original names in newdata were not retained when newdata was coerced to a data.frame. 
-              This can sometimes happen if some of the column names contain '-', which get converted to '.'.")
+              This can sometimes happen if some of the column names contain '-', which get converted to '.'")
     
     return(list(df = df, sp_type = sp_type))
 }

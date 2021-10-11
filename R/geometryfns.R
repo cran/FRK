@@ -388,9 +388,9 @@ auto_BAUs <- function(manifold, type=NULL,cellsize = NULL,
 
     if(is.null(data) & !on_sphere)
         stop("Need to supply data for planar problems")
-
-    ## If user has not supplied cellsize supply it. Note that cellsize is not relevant when not
-    ## on sphere since BAUs are given by ISEA3h in this case
+    
+    ## If user has not supplied cellsize supply it. Note that cellsize is 
+    ## irrelevant when on sphere since BAUs are given by ISEA3h in this case
     if(is.null(cellsize)) {
         ## if we are on the plane (hence isea3h_res is not set) or we are on the sphere or user has
         ## specified type ``grid'' (even with sphere), then find the cellsize
@@ -401,7 +401,6 @@ auto_BAUs <- function(manifold, type=NULL,cellsize = NULL,
             cellsize <- 1
     }
 
-    ## If we are not on the sphere
     if(!on_sphere){
 
         ## Make cellsize have the same dimensions as the manifold if only one number specified
@@ -431,8 +430,6 @@ auto_BAUs <- function(manifold, type=NULL,cellsize = NULL,
         if(!(is(spatial_BAUs, "SpatialPolygons") | is(spatial_BAUs, "SpatialPixels")))
             stop("The argument spatial_BAUs should be of class SpatialPolygonsDataFrame, or SpatialPixelsDataFrame")
     }
-
-        
     
     ## Call the internal function with checked arguments
     auto_BAU(manifold=manifold,type=type,cellsize=cellsize,resl=resl,d=data,
@@ -513,7 +510,7 @@ setMethod("auto_BAU",signature(manifold="real_line",d="xts"),
 
 
 ## Construct the BAUs around some time data
-auto_BAU_time <- function (manifold,type="grid",cellsize = 1,resl=resl,d=NULL,convex=-0.05,...) {
+auto_BAU_time <- function (manifold, type, cellsize, resl, d, convex, ...) {
 
     ## Extract other user-supplied arguments
     l <- list(...)
@@ -532,18 +529,18 @@ auto_BAU_time <- function (manifold,type="grid",cellsize = 1,resl=resl,d=NULL,co
     #dt <- as.difftime(cellsize, units = tunit) # time block size
 
     ## The time spacing
+    if(is.null(cellsize)) cellsize <- 1
     tspacing <- paste(cellsize,tunit)      # e.g., paste(1,"days")
     tgrid <- seq(truncPOSIXt(trange[1],tunit), # create grid based on range and spacing by truncating
                  ceil(trange[2]+1,tunit),      # to this time unit (e.g., "days")
                  by=tspacing)                  # and making the interval equal to tunit
 
     ## Finally round to the time unit (probably not needed)
-    tgrid <- suppressWarnings(roundPOSIXt(tgrid, tunit))
+    tgrid <- roundPOSIXt(tgrid, tunit)
 
-    ## NOTE: A suppresswarnings is needed since there seems to be a bug
-    ## in trunc.POSIXt when using units faster than days and more than
-    ## one element as input. This warning has no adverse affects as far
-    ## as I can see.
+    ## A warning is given from the line above when using units smaller than days 
+    ## and more than one element as input. This warning has no adverse affects as far
+    ## as I can tell.
 
     ## Ensure it's POSIXct, which is what FRK uses
     tgrid <- as.POSIXct(tgrid)
@@ -1224,6 +1221,11 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPoints"),
                   # data_over_sp <- cbind(data_df,data_over_sp)
                   # }
 
+                  ## Assign the CRS from sp_pols to data_sp. Note that the sp_pols
+                  ## are typically the BAUs object, and have not been altered
+                  ## significantly to this point (while data_sp has, and so 
+                  ## its CRS is often NA).
+                  proj4string(data_sp) <- proj4string(sp_pols) 
                   data_over_sp <- .parallel_over(data_sp, sp_pols)
 
                   ## We now cbind the original data with data_over_sp
@@ -1380,24 +1382,33 @@ setMethod("map_data_to_BAUs",signature(data_sp="SpatialPixels"),
 setMethod("map_data_to_BAUs",signature(data_sp="ST"),
           function(data_sp,sp_pols,average_in_BAU = TRUE, sum_variables = NULL, silently = FALSE) {
 
-              if(!(class(data_sp) == "STIDF"))
-                  stop("Currently spatio-temporal data where the spatial
-                      component is areal is under maintenance.
-                       Please contact the package maintainer")
-              
-              
               ## Initialise to no spatial field
               sp_fields <- NULL
 
-              ## Coerce to STIDF if necessary and then project all the space-time data onto space
-              data_all_spatial <- as(as(as(data_sp,"STIDF"),"Spatial"),
-                                     "SpatialPointsDataFrame")
+              ## Project all the space-time data onto space
+              data_all_spatial <- as(as(data_sp, "STIDF"), "Spatial")
 
+              ## Convert to SpatialPointsDataFrame
+              if (is(data_all_spatial, "SpatialPolygonsDataFrame")) {
+                  ## Unfortunately the following doesn't work:
+                  # data_all_spatial <- as(data_all_spatial, "SpatialPointsDataFrame")
+                  ## Instead, we will construct the object by computing the 
+                  ## centroids of each polygon, and then constructing the object 
+                  ## manually:
+                  data_all_spatial <- SpatialPointsDataFrame(
+                      coords = .polygons_to_points(data_all_spatial), 
+                      data = data_all_spatial@data
+                      )
+              } else {
+                  ## Almost certainly not necessary, but coerce to SpatialPoints:
+                  data_all_spatial <- as(data_all_spatial, "SpatialPointsDataFrame")
+              }
+              
+              
               ## Now we require all dates to be POSIXct, therefore convert
               if(!all(class(data_all_spatial$time) == "POSIXct")) {
                   data_all_spatial$time <- as.POSIXct(data_all_spatial$time)
               }
-
 
               ## Bin every spatial frame separately. The following returns a list of Spatial objects
               ## that are either SpatialPoints or SpatialPolygons, depending on data_sp
