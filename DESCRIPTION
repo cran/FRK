@@ -1,8 +1,8 @@
 Package: FRK
 Type: Package
 Title: Fixed Rank Kriging
-Version: 2.0.1
-Date: 2021-09-27
+Version: 2.0.2
+Date: 2021-11-16
 Authors@R: c(
     person("Andrew", "Zammit-Mangion", , "andrewzm@gmail.com", c("aut", "cre")),
     person("Matthew", "Sainsbury-Dale", , "msdale@uow.edu.au", c("aut")))
@@ -24,8 +24,8 @@ LazyData: true
 RoxygenNote: 7.1.2
 LinkingTo: Rcpp, TMB, RcppEigen
 Encoding: UTF-8
-Packaged: 2021-10-09 18:04:49 UTC; andrew
+Packaged: 2021-11-16 06:19:27 UTC; matthew
 Author: Andrew Zammit-Mangion [aut, cre],
   Matthew Sainsbury-Dale [aut]
 Repository: CRAN
-Date/Publication: 2021-10-11 08:10:19 UTC
+Date/Publication: 2021-11-16 13:00:09 UTC
