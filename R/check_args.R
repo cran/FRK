@@ -92,9 +92,9 @@
     
     ## Check that either the BAU-level size parameter, k_BAU, or the 
     ## observation-support size parameters, k_Z, are provided:
-    k_BAU_present <- "k_BAU" %in% names(BAUs)
-    k_Z_present <- all(sapply(data, function(l) "k_Z" %in% names(l)))
-    
+    k_BAU_present <- "k_BAU" %in% names(BAUs@data)
+    k_Z_present   <- all(sapply(data, function(l) "k_Z" %in% names(l@data)))
+
     if (!k_BAU_present && !k_Z_present) {
       stop("For binomial or negative-binomial data, the known constant size parameters (e.g., the number of trials or the target number of 'successes') must be provided with either the observations or the BAUs (see Section 2.5 of the FRK v2 paper for details).")
     } else if (k_BAU_present && k_Z_present) {
@@ -174,7 +174,7 @@
   if(method != "TMB" & fs_by_spatial_BAU) stop("fs_by_spatial_BAU can only be TRUE if method = 'TMB'. Please set method = 'TMB', or fs_by_spatial_BAU = FALSE.")
   
   if(print_lik && method == "TMB")
-    cat("The likelihood at each iteration cannot be accessed because you have selected TMB for model fitting: print_lik will be ignored.")
+    cat("The likelihood at each iteration cannot be accessed because you have selected TMB for model fitting: print_lik will be ignored.\n")
   
   ## Check known_sigma2fs 
   ns <- dim(BAUs)[1]
