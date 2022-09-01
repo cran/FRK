@@ -172,14 +172,16 @@ used in \pkg{FRK}. See Zammit-Mangion and Cressie
 
 \strong{Model description}
 
-The hierarchical model implemented in \pkg{FRK} is a spatial generalised 
+The hierarchical model implemented in \pkg{FRK} is a spatial generalised
 linear mixed model (GLMM), which may be summarised as
+
 \ifelse{html}{\out{<div style="text-align:center"> <i> Z<sub>j</sub> | <b>&mu;</b><sub>Z</sub>, &psi; ~ EF(&mu;<sub>Z<sub>j</sub></sub> , &psi;); &nbsp; &nbsp; &nbsp; j = 1, ..., m, </i></div>}}{\deqn{Z_j \mid \boldsymbol{\mu}_{Z}, \psi \sim EF(\mu_{Z_j}, \psi); \quad j = 1, \dots, m,}}
 \ifelse{html}{\out{<div style="text-align:center"> <i> <b>&mu;</b><sub>Z</sub> = <b>C</b><sub>Z</sub> <b>&mu;</b>, </i></div>}}{\deqn{\boldsymbol{\mu}_Z = \boldsymbol{C}_Z\boldsymbol{\mu}}}
 \ifelse{html}{\out{<div style="text-align:center"> <i> g(<b>&mu;</b>) = <b>Y</b>, </i></div>}}{\deqn{g(\boldsymbol{\mu}) = \boldsymbol{Y}}}
 \ifelse{html}{\out{<div style="text-align:center"> <i> <b>Y</b> = <b>T&alpha;</b> + <b>S&eta;</b> + <b>&xi;</b>, </i></div>}}{\deqn{\boldsymbol{Y} = \boldsymbol{T}\boldsymbol{\alpha} + \boldsymbol{S}\boldsymbol{\eta} + \boldsymbol{\xi}}}
 \ifelse{html}{\out{<div style="text-align:center"> <i> <b>&alpha;</b> | <b>&vartheta;</b> ~ N(<b>0</b>, <b>K</b>),</i></div>}}{\deqn{\boldsymbol{\alpha} \mid \boldsymbol{\vartheta} \sim N(\boldsymbol{0}, \boldsymbol{K})}}
 \ifelse{html}{\out{<div style="text-align:center"> <i> <b>&xi;</b> ~ N(<b>0</b>, <b>&Sigma;</b><sub>&xi;</sub>),</i></div><br>}}{\deqn{\boldsymbol{\xi} \mid \sigma^2_\xi \sim N(\boldsymbol{0}, \boldsymbol{\Sigma}_\xi),}}
+
 where \ifelse{html}{\out{<i>Z<sub>j</sub></i>}}{\eqn{Z_j}} denotes a datum, \eqn{EF}  corresponds to a probability 
 distribution in the exponential family with dispersion parameter \eqn{\psi},
 \ifelse{html}{\out{<i> <b>&mu;</b><sub>Z</sub> </i>}}{\eqn{\boldsymbol{\mu}_Z}} is the vector containing the conditional expectations of each datum, 
@@ -189,13 +191,12 @@ distribution in the exponential family with dispersion parameter \eqn{\psi},
 the matrix \ifelse{html}{\out{<i> <b>T</b> </i>}}{\eqn{\boldsymbol{T}}} contains regression covariates at the BAU level associated with the fixed effects 
 \ifelse{html}{\out{<i> <b>&alpha;</b> </i>}}{\eqn{\boldsymbol{\alpha}}}, 
 the matrix \ifelse{html}{\out{<i> <b>S</b> </i>}}{\eqn{\boldsymbol{S}}} contains basis function evaluations over the BAUs, 
-\ifelse{html}{\out{<i> <b>&eta;</b> </i>}}{\eqn{\boldsymbol{\eta}}} are the random coefficients associated with the basis functions, and \ifelse{html}{\out{<i> <b>&xi;</b> </i>}}{\eqn{\boldsymbol{\xi}}} is 
-a vector containing fine-scale variation at the BAU level. 
+\ifelse{html}{\out{<i> <b>&eta;</b> </i>}}{\eqn{\boldsymbol{\eta}}} are the random coefficients associated with the basis functions, and \ifelse{html}{\out{<i> <b>&xi;</b> </i>}}{\eqn{\boldsymbol{\xi}}} is a vector containing fine-scale variation at the BAU level.
 
 The prior distribution of the basis-function coefficients, \ifelse{html}{\out{<i> <b>&eta;</b> </i>}}{\eqn{\boldsymbol{\eta}}}, are formulated 
 using either a covariance matrix \ifelse{html}{\out{<i> <b>K</b> </i>}}{\eqn{\boldsymbol{K}}} or precision matrix \ifelse{html}{\out{<i> <b>Q</b> </i>}}{\eqn{\boldsymbol{Q}}}, depending on the argument 
 \code{K_type}; the parameters of these matrices, \ifelse{html}{\out{<i> <b>&vartheta;</b> </i>}}{\eqn{\boldsymbol{\vartheta}}}, are estimated during model 
-fitting. 
+fitting.
 The covariance matrix of \ifelse{html}{\out{<i> <b>&xi;</b> </i>}}{\eqn{\boldsymbol{\xi}}}, 
 \ifelse{html}{\out{<i> <b>&Sigma;</b><sub>&xi;</sub> </i>}}{\eqn{\boldsymbol{\Sigma}_\xi}}, 
 is diagonal. 
@@ -216,11 +217,13 @@ the user via the argument \code{known_sigma2fs}.
 
 When the data is Gaussian, and an identity link function is used, the preceding 
 model simplifies considerably: Specifically,
+
 \ifelse{html}{\out{
 <div style="text-align:center"><i> <b>Z</b> = <b>C</b><sub>Z</sub><b>Y</b> + <b>C</b><sub>Z</sub><b>&delta;</b> + <b>e</b>,<br> </i></div>
 }}{
 \deqn{\boldsymbol{Z} = \boldsymbol{C}_Z\boldsymbol{Y} + \boldsymbol{C}_Z\boldsymbol{\delta} + \boldsymbol{e},} 
 }
+
 where 
 \ifelse{html}{\out{<i><b>Z</b></i>}}{\eqn{\boldsymbol{Z}}} is the data vector, 
 \ifelse{html}{\out{<i><b>&delta;</b></i>}}{\eqn{\boldsymbol{\delta}}} is systematic error at the BAU level, and 

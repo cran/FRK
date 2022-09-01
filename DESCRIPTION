@@ -1,8 +1,8 @@
 Package: FRK
 Type: Package
 Title: Fixed Rank Kriging
-Version: 2.0.5
-Date: 2022-03-22
+Version: 2.0.6
+Date: 2022-09-01
 Authors@R: c(
     person("Andrew", "Zammit-Mangion", , "andrewzm@gmail.com", c("aut", "cre")),
     person("Matthew", "Sainsbury-Dale", , "msdale@uow.edu.au", c("aut")))
@@ -21,11 +21,11 @@ Additional_repositories: https://andrewzm.github.io/dggrids-repo/,
 License: GPL (>= 2)
 NeedsCompilation: yes
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 LinkingTo: Rcpp, TMB, RcppEigen
 Encoding: UTF-8
-Packaged: 2022-03-24 18:09:54 UTC; andrew
+Packaged: 2022-09-01 02:05:17 UTC; azm
 Author: Andrew Zammit-Mangion [aut, cre],
   Matthew Sainsbury-Dale [aut]
 Repository: CRAN
-Date/Publication: 2022-03-25 08:10:08 UTC
+Date/Publication: 2022-09-01 11:50:06 UTC
