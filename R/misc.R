@@ -254,7 +254,7 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
   ## Minimum distance between neighbouring basis functions.
   ## (add a large number to the diagonal, which would otherwise be 0)
   minDist <- sapply(D_matrices, function(D) min(D + 10^8 * diag(nrow(D))))
-
+  
   return(taper * minDist)
 }
 
@@ -283,7 +283,7 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
 ##   some distances set to zero post tapering.}
 ## }
 .cov_tap <- function(D_matrices, taper){
-
+  
   if (!is(D_matrices, "list")) 
     stop("D_matrices should be a list of matrices giving the distance between basis functions at each resolution")
   
@@ -298,7 +298,7 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
   nnz <- sapply(D_tap, function(D) length(D@x))
   
   D_tap <- Matrix::bdiag(D_tap)
-
+  
   return(list("beta" = beta, "nnz" = nnz, "D_tap" = D_tap))
 }
 
@@ -363,8 +363,7 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
 ## associated with the ith basis function.
 ##
 ## This function is only designed for basis functions
-## at \emph{one resolution}. It also assumes the basis functions are in a
-## rectangular lattice.
+## at \emph{one resolution}. 
 ##
 ## @seealso \code{\link{.sparse_Q}}, \code{\link{.sparse_Q_block_diag}}
 ##
@@ -376,8 +375,16 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
   n <- sapply(df, function(x) length(unique(x)))
   if (length(n) < 2) stop(".neighbour_matrix() assumes at least two spatial dimensions")
   
-  # Check that the lattice of basis functions is indeed rectangular
-  if (prod(n) != nrow(df)) stop(".neighbour_matrix() requires a fully-observed rectangular array of basis functions; if the basis functions were constructed using auto_basis(), please set prune = 0.")
+  # Determine if the lattice of basis functions is rectangular
+  # if (prod(n) != nrow(df)) stop(".neighbour_matrix() requires a fully-observed rectangular array of basis functions; if the basis functions were constructed using auto_basis(), please set prune = 0.")
+  rectangular <- prod(n) == nrow(df) 
+  A <- if (rectangular) .neighbour_matrix_rectangular(df, n) else .neighbour_matrix_nonrectangular(df)
+  
+  return(A)
+}
+
+## This function assumes the basis functions are in a rectangular lattice.
+.neighbour_matrix_rectangular <- function(df, n) {
   
   # Adjacency matrix for the first two spatial dimensions
   A <- .A(n[1]) %x% Diagonal(n[2]) + Diagonal(n[1]) %x% .A(n[2]) 
@@ -394,6 +401,128 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
   
   return(A)
 }
+
+## This function assumes the basis functions are in a
+## regularly-spaced lattice. The shape of the lattice is not important, but
+## there \emph{must} be constant spacing between basis functions in a given
+## direction (horizontal and vertical spacing can be different).
+# .neighbour_matrix_nonrectangular <- function(df) {
+#   
+#   # TODO this function is not very memory efficient, since it uses dense matrices throughout
+#   
+#   A <- matrix(0, nrow = nrow(df), ncol = nrow(df)) 
+#   
+#   ## absolute difference in each dimension for each knot
+#   abs_diff <- lapply(df, function(x) abs(outer(x, x, "-")))
+#   
+#   ## Vectors containing all x and y distances. 
+#   ## Note that the first elements in each vector is 0. 
+#   ## Note also that we only use 1 row from the abs_diff matrices (this helps 
+#   ## to prevents problems with unique() and floating point accuracy and is a 
+#   ## bit faster)
+#   distances <- lapply(abs_diff, function(X) sort(unique(X[1, ])))
+#   
+#   ## Extract the smallest distance which is not zero, provided the basis functions 
+#   ## are not in a straight line. 
+#   ## If the basis functions have the same coordinate in a given dimension, the 
+#   ## corresponding entry in distances will contain only a single element (0), 
+#   ## so x[i + 1] doesn't work (results in NA). 
+#   min_d <- lapply(distances, function(x) if(length(x) == 1) 0 else x[2])
+#   
+#   ## Find the neighbours. This is based on the idea that, provided the basis
+#   ## functions are regularly spaced, neighbours in a given dimension should be 
+#   ## separated by the minimum distance between basis functions of that dimension (condition1), 
+#   ## and have the same coordinates for the other dimensions (condition2). 
+#   d <- length(abs_diff) # number of spatial coordinates
+#   neighbours <- lapply(seq_along(abs_diff), function(i) {
+#     condition1 <- .equal_within_tol(abs_diff[[i]], min_d[[i]])
+#     if (d > 1) {
+#       condition2 <- lapply((1:d)[-i], function(j) .equal_within_tol(abs_diff[[j]], 0))
+#       condition2 <- Reduce("&", condition2) # Convert list of matrices to a single matrix
+#     } else {
+#       condition2 <- TRUE
+#     }
+#     return(condition1 & condition2)
+#   })
+#   
+#   ## Update neighbour matrix (with zeros along the diagonal)
+#   ## We weight the neighbours by their order.
+#   A <- A + Reduce("+", neighbours)
+#   
+#   ## Add the sums of each row to the diagonal (required for use in the 
+#   ## precision matrix computation later)
+#   diag(A) <- rowSums(A)
+#   
+#   return(A)
+# }
+
+## This function assumes the basis functions are in a
+## regularly-spaced lattice. The shape of the lattice is not important, but
+## there \emph{must} be constant spacing between basis functions in a given
+## direction (horizontal and vertical spacing can be different).
+.neighbour_matrix_nonrectangular <- function(df, order = 1, diag_neighbours = FALSE) {
+  
+  A <- matrix(0, nrow = nrow(df), ncol = nrow(df))
+  
+  ## absolute difference in each dimension for each knot
+  abs_diff <- lapply(df, function(x) abs(outer(x, x, "-")))
+  
+  ## Vectors containing all x and y distances. 
+  ## Note that the first elements in each vector is 0. 
+  ## Note also that we only use 1 row from the abs_diff matrices (this helps 
+  ## to prevents problems with unique() and floating point accuracy and is a 
+  ## bit faster)
+  distances <- lapply(abs_diff, function(X) sort(unique(X[1, ])))
+  
+  for (current_order in 1:order) { ## Order is experimental, and is hard-coded to be 1 for now
+    
+    ## Extract the smallest distance which is not zero, provided the basis functions 
+    ## are not in a straight line. 
+    ## If the basis functions have the same coordinate in a given dimension, the 
+    ## corresponding entry in distances will contain only a single element (0), 
+    ## so x[i + 1] doesn't work (results in NA). 
+    min_d <- lapply(distances, function(x) if(length(x) == 1) 0 else x[current_order + 1])
+    
+    ## Find the neighbours. This is based on the idea that, provided the basis
+    ## functions are regularly spaced, neighbours in a given dimension should be 
+    ## separated by the minimum distance between basis functions of that dimension (condition1), 
+    ## and have the same coordinates for the other dimensions (condition2). 
+    d <- length(abs_diff) # number of spatial coordinates
+    neighbours <- lapply(seq_along(abs_diff), function(i) {
+      condition1 <- .equal_within_tol(abs_diff[[i]], min_d[[i]])
+      if (d > 1) {
+        condition2 <- lapply((1:d)[-i], function(j) .equal_within_tol(abs_diff[[j]], 0))
+        condition2 <- Reduce("&", condition2) # Convert list of matrices to a single matrix
+      } else {
+        condition2 <- TRUE
+      }
+      return(condition1 & condition2)
+    })
+    
+    ## Consider the diagonal neighbours, if specified.
+    if (diag_neighbours == TRUE) {
+      ## For basis-functions to be diagonal neighbours, they need to have the minimum
+      ## (non-zero distance) between them in each spatial coordinate.
+      diagonal_neighbours <- lapply(seq_along(abs_diff), function(i) {
+        .equal_within_tol(abs_diff[[i]], min_d[[i]])
+      })
+      
+      diagonal_neighbours <-  Reduce("&", diagonal_neighbours) # Convert list of matrices to a single matrix
+      ## Update A
+      A <- A + 1/current_order * diagonal_neighbours
+    }
+    ## Update neighbour matrix (with zeros along the diagonal)
+    ## We weight the neighbours by their order.
+    A <- A + 1/current_order * Reduce("+", neighbours)
+  }
+  
+  ## Add the sums of each row to the diagonal (required for use in the 
+  ## precision matrix computation later)
+  diag(A) <- rowSums(A)
+  
+  return(A)
+}
+
 
 
 ## Sparse precision matrix.
@@ -432,16 +561,16 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
 ## @return list containing the sparse block-diagonal precision matrix (Q) of class "dgCMatrix", and the number of non-zero elements (nnz) at each resolution.
 ## @seealso \code{\link{.sparse_Q}}, \code{\link{.neighbour_matrix}}
 .sparse_Q_block_diag <- function(df, kappa, rho) {
-
+  
   if (!("res" %in% names(df)))
     stop("To construct the sparse precision matrix, the basis-function data.frame must contain a column named res, indicating the resolution of the corresponding basis functions.")
   nres <- length(unique(df$res))
   if (length(kappa) == 1) kappa <- rep(kappa, nres)
   if (length(rho) == 1) rho <- rep(rho, nres)
-
+  
   ## Find the location columns (should be called loc1, loc2, etc.)
   loc_idx <- grep("loc", names(df))
-
+  
   ## Construct the blocks
   Q_matrices  <- list()
   nnz <- c()
@@ -450,10 +579,10 @@ nasa_palette <- c("#03006d","#02008f","#0000b6","#0001ef","#0000f6","#0428f6","#
     Q_matrices[[i]] <- .sparse_Q(A = A_i, kappa = kappa[i], rho = rho[i])
     nnz[i] <- Matrix::nnzero(Q_matrices[[i]]) # note that nnzero does not count explicit zeros
   }
-
+  
   ## Block diagonal
   Q <- Matrix::bdiag(Q_matrices)
-
+  
   return(list(Q = Q, nnz = nnz))
 }
 
