@@ -1,4 +1,4 @@
-8d3dcda9a41daca14bae3b409bb300ef *DESCRIPTION
+b631b3a6c84db769cbaeae02e2d24f81 *DESCRIPTION
 4f817f5092189378365b6144b5ee3316 *NAMESPACE
 82675fd439a1479b825d50f33cec2ddb *R/AllClass.R
 8f108b5eb49822a85f2d00621d5532a3 *R/AllGeneric.R
@@ -12,7 +12,7 @@ ba68231eb88e36e0a971eadca391a455 *R/SREvalidation.R
 a45c3ec5dcfdb96b4529ea5f3e0f23ec *R/basisfns.R
 9edd095f19782f0aa787876a206f687c *R/check_args.R
 eea976739dc6f015632453e7f44230a0 *R/datadoc.R
-4be15fcae0f64d9d3d8c8131c8d670ee *R/geometryfns.R
+9cf1f86f0f9cc20aea02059589b17f51 *R/geometryfns.R
 1cff5b80637d84bb96f0c4e9d8901d9c *R/linalgfns.R
 857759566208e33ddaa51a84d4e07579 *R/misc.R
 48257e719eda981c42bc2b641e07380a *R/options.R
@@ -31,10 +31,10 @@ e2cb89c44ec958d6984ed440cabc7300 *demo/00Index
 25b30496de949153329b51050af1c322 *inst/CITATION
 736603e717c284aa0f49b8b7ad06f540 *inst/doc/FRK_intro.R
 c5442a24c876f77d5ec3d02771850a1b *inst/doc/FRK_intro.Rnw
-3ca8392c4d47108d765704d36b623fd5 *inst/doc/FRK_intro.pdf
+ad035232ab5f9bb18cf03d503b16fe0a *inst/doc/FRK_intro.pdf
 e9a39d7a31685628b1892cf2f7df3ad7 *inst/doc/FRK_non-Gaussian.R
 70f5da889abb34808ffcfa2ec384e6e4 *inst/doc/FRK_non-Gaussian.Rnw
-a22e20cf982b38fad0b9c7d6ea97acf5 *inst/doc/FRK_non-Gaussian.pdf
+f7a83f223226901e96f109059e5e8a92 *inst/doc/FRK_non-Gaussian.pdf
 0e13d532008db1bfe8b3e9028cdea2ec *man/AIRS_05_2003.Rd
 600e6b85c05cf42b65026bdf05d9c578 *man/Am_data.Rd
 e772af7eb1a3ebb09aee35c52dc6c717 *man/BAUs_from_points.Rd

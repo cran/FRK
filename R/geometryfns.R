@@ -845,7 +845,17 @@ setMethod("auto_BAU",signature(manifold="sphere"),
                                                1,NA)
 
               ## Otherwise filter by convex hull
-              else  sphere_BAUs$in_chull <- over(sphere_BAUs,conv_hull)
+              else  {
+                ## We need sf to prune by convex hull on sphere
+                  if(!requireNamespace("sf"))
+                      stop("sf is required for processing hexagons on the sphere.
+                      Please install using install.packages().")
+                  sphere_BAUs$in_chull <- as.integer(sf::st_intersects(as(sphere_BAUs, "sf"),
+                                                                   as(conv_hull, "sf")))
+              }
+
+              ## Old rgeos code
+              ## else  sphere_BAUs$in_chull <- over(sphere_BAUs,conv_hull)
 
               ## Remove those BAUs
               sphere_BAUs <- subset(sphere_BAUs,!is.na(in_chull))
@@ -1756,9 +1766,9 @@ process_isea3h <- function(isea3h,resl) {
   ## suppress bindings warning
   res <- lon <- probpoly <- centroid <- lat <- NULL
 
-  ## We need rgeos to process these polygons
-  if(!requireNamespace("rgeos"))
-    stop("rgeos is required for processing hexagons on the sphere.
+  ## We need sf to process these polygons
+  if(!requireNamespace("sf"))
+    stop("sf is required for processing hexagons on the sphere.
              Please install using install.packages().")
 
   isea3h_res <- filter(isea3h,res == resl) %>%
@@ -1783,16 +1793,34 @@ process_isea3h <- function(isea3h,resl) {
 
   line = SpatialLines(list(Lines(list(Line(cbind(lon=c(180,180),lat=c(-90,90)))),
                                  ID="line")))
+  line_sf <- as(line, "sf")
+  prob_polys2_sf <- as(prob_polys2_sp, "sf")
+
   new_polys <- NULL
-  for(i in 1:length(prob_polys2_sp)) {
+  for(i in 1:length(prob_polys2_sf$geometry)) {
     # Just ignore if cannot find intersection, might create some small gaps in sphere (?)
     # Suppressing warnings from rgeos when error is caught and treated later
-    lpi <- suppressWarnings(tryCatch(rgeos::gIntersection(prob_polys2_sp[i,], line),
-                    error=function(e) {TRUE}))
+
+    lpi <- suppressWarnings(tryCatch(sf::st_intersection(prob_polys2_sf[i,], line_sf),
+                                     error=function(e) {TRUE}))
+
+    ## Old rgeos version:
+    ## lpi <- suppressWarnings(tryCatch(rgeos::gIntersection(prob_polys2_sp[i,], line),
+    ##                     error=function(e) {TRUE}))
 
     if(!is(lpi,"logical")) {
-      blpi <- rgeos::gBuffer(lpi, width = 0.000001)        # create a very thin polygon
-      dpi <- rgeos::gDifference(prob_polys2_sp[i,], blpi)  # split using gDifference
+
+      blpi <- sf::st_buffer(lpi, dist = 0.000001) # create a very thin polygon
+
+      ## Old rgeos version:
+      ## blpi <- rgeos::gBuffer(lpi, width = 0.000001)
+
+
+      dpi_sf <- sf::st_difference(prob_polys2_sf[i,], blpi) # split polygons
+      dpi <- sf::as_Spatial(dpi_sf)
+
+      ## Old rgeos version:
+      ## dpi <- rgeos::gDifference(prob_polys2_sp[i,], blpi)
 
       pol1 <- dpi@polygons[[1]]@Polygons[[1]]@coords
       pol2 <- dpi@polygons[[1]]@Polygons[[2]]@coords
