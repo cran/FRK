@@ -1,4 +1,4 @@
-b631b3a6c84db769cbaeae02e2d24f81 *DESCRIPTION
+68a1309f9c42ed4f631a2a479f354a4d *DESCRIPTION
 4f817f5092189378365b6144b5ee3316 *NAMESPACE
 82675fd439a1479b825d50f33cec2ddb *R/AllClass.R
 8f108b5eb49822a85f2d00621d5532a3 *R/AllGeneric.R
@@ -12,7 +12,7 @@ ba68231eb88e36e0a971eadca391a455 *R/SREvalidation.R
 a45c3ec5dcfdb96b4529ea5f3e0f23ec *R/basisfns.R
 9edd095f19782f0aa787876a206f687c *R/check_args.R
 eea976739dc6f015632453e7f44230a0 *R/datadoc.R
-9cf1f86f0f9cc20aea02059589b17f51 *R/geometryfns.R
+859f42a212b718d9b302eba3ca4fce5c *R/geometryfns.R
 1cff5b80637d84bb96f0c4e9d8901d9c *R/linalgfns.R
 857759566208e33ddaa51a84d4e07579 *R/misc.R
 48257e719eda981c42bc2b641e07380a *R/options.R
@@ -28,13 +28,13 @@ a18eae898e6ad80a851a177f57cdec74 *data/worldmap.rda
 e2cb89c44ec958d6984ed440cabc7300 *demo/00Index
 3aff2031364b48fe7f54dcc42322c8d7 *demo/FRK-meuse-BAUs-as-points.R
 3aee4b10d695bca5a07368a4d23b5b82 *demo/FRK-meuse.R
-25b30496de949153329b51050af1c322 *inst/CITATION
+a3e089a272de10497f3198cb5994d300 *inst/CITATION
 736603e717c284aa0f49b8b7ad06f540 *inst/doc/FRK_intro.R
 c5442a24c876f77d5ec3d02771850a1b *inst/doc/FRK_intro.Rnw
-ad035232ab5f9bb18cf03d503b16fe0a *inst/doc/FRK_intro.pdf
+0b6db7115f70f0a859434cb14d5822c3 *inst/doc/FRK_intro.pdf
 e9a39d7a31685628b1892cf2f7df3ad7 *inst/doc/FRK_non-Gaussian.R
 70f5da889abb34808ffcfa2ec384e6e4 *inst/doc/FRK_non-Gaussian.Rnw
-f7a83f223226901e96f109059e5e8a92 *inst/doc/FRK_non-Gaussian.pdf
+02b099b019335a1bed4fb69a917a8e51 *inst/doc/FRK_non-Gaussian.pdf
 0e13d532008db1bfe8b3e9028cdea2ec *man/AIRS_05_2003.Rd
 600e6b85c05cf42b65026bdf05d9c578 *man/Am_data.Rd
 e772af7eb1a3ebb09aee35c52dc6c717 *man/BAUs_from_points.Rd
@@ -85,8 +85,8 @@ f902d47e9ac8acb738fd65956d7f6bd8 *man/worldmap.Rd
 58865a6adaf93a0051714fdd6ff91867 *src/FRK-win.def
 8f10fc95144bcd986e969fa83dc9027d *src/FRK.cpp
 5d5f0286338948bd87244933bc3b4869 *tests/testthat.R
-2dd9d3886b7dd002f25cdf8717aeede2 *tests/testthat/test_BAUs.R
-14a40d315636d72972d88ea501bf2216 *tests/testthat/test_SRE.R
+227850d96f53de6392fd5ace0185dc76 *tests/testthat/test_BAUs.R
+c96ed0592de21e8ad843a51e1cf1f0be *tests/testthat/test_SRE.R
 9c7c95b96b197ba9c5a2628ec32181f9 *tests/testthat/test_basis.R
 7ce02c70a5eb25d7f43e3b34d4d80432 *tests/testthat/test_domains.R
 e5852dc425ed2c14b3492f84d593a3ed *tests/testthat/test_linalg.R

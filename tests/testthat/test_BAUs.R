@@ -32,7 +32,7 @@ test_that("plane_BAUs",{
     set.seed(1)
     data <- data.frame(x = rnorm(5),y=rnorm(5),z = rnorm(5),std=1)
     coordinates(data) <- ~x+y
-    if(require("INLA") & require("rgdal")) {
+    if(require("INLA") & require("rgdal", quietly = TRUE)) {
         Grid2D <- auto_BAUs(manifold = plane(),
                             type="grid",
                             cellsize = 0.5,
@@ -117,6 +117,25 @@ test_that("sphere_BAUs",{
 
 })
 
+test_that("sphere_BAUs_subset_BAUs",{
+
+    set.seed(1)
+    df <- data.frame(lon = runif(n = 1000, min = 120, max = 160),
+                     lat = runif(n = 1000, min = 57, max = 88))
+    coordinates(df) <- c("lon", "lat")
+    slot(df, "proj4string") <- CRS('+proj=longlat +ellps=sphere')
+
+    isea3h_1 <- auto_BAUs(manifold = sphere(),
+                          type = "hex",
+                          isea3h_res = 5,
+                          data = df)
+
+    sf::sf_use_s2(FALSE)
+    data_in_BAUs <- sf::st_contains(as(isea3h_1, "sf"), as(df, "sf"))
+    expect_equal(all(colSums(as.matrix(data_in_BAUs)) == 1), TRUE)
+    #plot(isea3h_1, col = "red")
+    #plot(df, add = TRUE)
+})
 
 test_that("SpaceTime_BAUs",{
     library(sp)
@@ -138,7 +157,7 @@ test_that("SpaceTime_BAUs",{
                            tunit="days")
     expect_is(time_grid,"POSIXct")
 
-    if(require("INLA") & require("rgdal")) {
+    if(require("INLA") & require("rgdal", quietly = TRUE)) {
         space_time_grid <- auto_BAUs(STplane(),
                                      type="hex",
                                      cellsize = c(0.1,0.1,1),
