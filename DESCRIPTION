@@ -1,8 +1,8 @@
 Package: FRK
 Type: Package
 Title: Fixed Rank Kriging
-Version: 2.2.0
-Date: 2023-10-18
+Version: 2.2.1
+Date: 2024-01-09
 Authors@R: c(
     person("Andrew", "Zammit-Mangion", , "andrewzm@gmail.com", c("aut", "cre")),
     person("Matthew", "Sainsbury-Dale", , "msdale@uow.edu.au", c("aut")))
@@ -12,8 +12,8 @@ Description: A tool for spatial/spatio-temporal modelling and prediction with la
 URL: https://andrewzm.github.io/FRK/, https://github.com/andrewzm/FRK/
 BugReports: https://github.com/andrewzm/FRK/issues/
 Depends: R (>= 3.5.0)
-Suggests: covr, dggrids, gstat, INLA, knitr, mapproj, parallel, sf,
-        spdep, splancs, testthat, verification
+Suggests: covr, dggrids, gstat, INLA, knitr, lme4, mapproj, parallel,
+        sf, spdep, splancs, testthat, verification
 Imports: digest, dplyr, ggplot2, grDevices, Hmisc (>= 4.1), Matrix,
         methods, plyr, Rcpp (>= 0.12.12), sp, spacetime, sparseinv,
         statmod, stats, TMB, utils, ggpubr, reshape2, scales
@@ -25,8 +25,8 @@ LazyData: true
 RoxygenNote: 7.2.3
 LinkingTo: Rcpp, TMB, RcppEigen
 Encoding: UTF-8
-Packaged: 2023-10-18 12:06:30 UTC; andrewzm
+Packaged: 2023-12-26 18:34:44 UTC; andrewzm
 Author: Andrew Zammit-Mangion [aut, cre],
   Matthew Sainsbury-Dale [aut]
 Repository: CRAN
-Date/Publication: 2023-10-18 13:30:08 UTC
+Date/Publication: 2024-01-09 11:20:02 UTC
