@@ -1,4 +1,4 @@
-3cb51bfe4afb75656e7e64047405b0e4 *DESCRIPTION
+b65cb6a73b51367e216e5dbc21f2021e *DESCRIPTION
 b4ef236b668ae9dfc8d7298a3509e582 *NAMESPACE
 c0f89677a7b4e0334aa5cbe83eee9a85 *R/AllClass.R
 cf24430caf30ee1d84eccf9a80ce4236 *R/AllGeneric.R
@@ -10,7 +10,7 @@ b129e464ba609766a9880656156602e7 *R/SREfit.R
 ccdbcbe53ca3311e7cd08502db3544e3 *R/SREutils.R
 cb7178b7660e3ec90c24f2b84e13f874 *R/SREvalidation.R
 0ab3e09328781f1e45b3d0beecfd422e *R/basisfns.R
-dbb18b71466d9e536349574f5f7dc362 *R/check_args.R
+5019b342503925e76860c738f5270650 *R/check_args.R
 eea976739dc6f015632453e7f44230a0 *R/datadoc.R
 003684456ad3ac346e123797b21acace *R/geometryfns.R
 1cff5b80637d84bb96f0c4e9d8901d9c *R/linalgfns.R
@@ -31,10 +31,10 @@ e2cb89c44ec958d6984ed440cabc7300 *demo/00Index
 790050327eced16e1e83358d6d6711f7 *inst/CITATION
 ba93c0c28fbf8473cdd3f335f711cfa4 *inst/doc/FRK_intro.R
 ed17c46d6b47f0c1f4609572ac074a88 *inst/doc/FRK_intro.Rnw
-b6f4a011cffd662cb97de8689a024943 *inst/doc/FRK_intro.pdf
+e3245917bd13a672ab7e33e0d777e0ec *inst/doc/FRK_intro.pdf
 e9a39d7a31685628b1892cf2f7df3ad7 *inst/doc/FRK_non-Gaussian.R
 70f5da889abb34808ffcfa2ec384e6e4 *inst/doc/FRK_non-Gaussian.Rnw
-b19c678ca1c09754c94a502d2e82c38d *inst/doc/FRK_non-Gaussian.pdf
+a2b758bcf7c7e03a47d3db994baddedf *inst/doc/FRK_non-Gaussian.pdf
 0e13d532008db1bfe8b3e9028cdea2ec *man/AIRS_05_2003.Rd
 600e6b85c05cf42b65026bdf05d9c578 *man/Am_data.Rd
 e772af7eb1a3ebb09aee35c52dc6c717 *man/BAUs_from_points.Rd
@@ -87,7 +87,7 @@ f902d47e9ac8acb738fd65956d7f6bd8 *man/worldmap.Rd
 5e46626e6fb97e13227ec571279a7d19 *src/FRK.cpp
 5d5f0286338948bd87244933bc3b4869 *tests/testthat.R
 488bae8bf95bf0701a154a21dd25893f *tests/testthat/test_BAUs.R
-c96ed0592de21e8ad843a51e1cf1f0be *tests/testthat/test_SRE.R
+e96580bb809158236f84879f813b4e39 *tests/testthat/test_SRE.R
 ff9029d4c8985017306ddb5eff5aef88 *tests/testthat/test_basis.R
 7ce02c70a5eb25d7f43e3b34d4d80432 *tests/testthat/test_domains.R
 e5852dc425ed2c14b3492f84d593a3ed *tests/testthat/test_linalg.R
