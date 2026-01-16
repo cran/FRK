@@ -1,8 +1,8 @@
 Package: FRK
 Type: Package
 Title: Fixed Rank Kriging
-Version: 2.3.1
-Date: 2024-07-16
+Version: 2.3.2
+Date: 2026-01-15
 Authors@R: c(
     person("Andrew", "Zammit-Mangion", , "andrewzm@gmail.com", c("aut", "cre")),
     person("Matthew", "Sainsbury-Dale", , "msdale@uow.edu.au", c("aut")))
@@ -12,8 +12,8 @@ Description: A tool for spatial/spatio-temporal modelling and prediction with la
 URL: https://andrewzm.github.io/FRK/, https://github.com/andrewzm/FRK/
 BugReports: https://github.com/andrewzm/FRK/issues/
 Depends: R (>= 3.5.0)
-Suggests: covr, dggrids, gstat, knitr, lme4, mapproj, parallel, sf,
-        spdep, splancs, testthat, verification
+Suggests: covr, dggrids, gridExtra, gstat, knitr, lme4, mapproj,
+        parallel, sf, spdep, splancs, testthat, verification
 Imports: digest, dplyr, fmesher, ggplot2, grDevices, Hmisc (>= 4.1),
         Matrix, methods, plyr, Rcpp (>= 0.12.12), sp, spacetime,
         sparseinv, statmod, stats, TMB, utils, ggpubr, reshape2, scales
@@ -21,11 +21,11 @@ Additional_repositories: https://andrewzm.github.io/dggrids-repo/
 License: GPL (>= 2)
 NeedsCompilation: yes
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 LinkingTo: Rcpp, TMB, RcppEigen
 Encoding: UTF-8
-Packaged: 2024-07-16 06:41:34 UTC; andrewzm
+Packaged: 2026-01-15 21:55:06 UTC; andrewzm
 Author: Andrew Zammit-Mangion [aut, cre],
   Matthew Sainsbury-Dale [aut]
 Repository: CRAN
-Date/Publication: 2024-07-16 08:10:01 UTC
+Date/Publication: 2026-01-16 09:10:53 UTC
